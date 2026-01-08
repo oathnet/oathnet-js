@@ -1,0 +1,54 @@
+{
+  "name": "oathnet",
+  "version": "1.0.0",
+  "description": "Official Node.js SDK and CLI for OathNet API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "oathnet": "./bin/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "cli": "ts-node bin/cli.ts",
+    "example:basic": "ts-node examples/basic-usage.ts",
+    "example:breach": "ts-node examples/breach-search.ts",
+    "example:stealer": "ts-node examples/stealer-search.ts",
+    "example:victims": "ts-node examples/victims-search.ts",
+    "example:file-search": "ts-node examples/file-search.ts",
+    "example:osint": "ts-node examples/osint-lookups.ts",
+    "example:exports": "ts-node examples/exports.ts",
+    "example:errors": "ts-node examples/error-handling.ts",
+    "example:pagination": "ts-node examples/pagination.ts"
+  },
+  "keywords": ["oathnet", "osint", "breach", "stealer", "security"],
+  "author": "OathNet <info@oathnet.org>",
+  "license": "MIT",
+  "homepage": "https://oathnet.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oathnet/oathnet-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/oathnet/oathnet-js/issues"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "cli-table3": "^0.6.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.0",
+    "ts-node": "^10.9.2",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11",
+    "ts-jest": "^29.1.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
