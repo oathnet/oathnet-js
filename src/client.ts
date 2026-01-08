@@ -17,7 +17,6 @@ import { StealerV2Service } from './services/stealer';
 import { VictimsService } from './services/victims';
 import { FileSearchService } from './services/fileSearch';
 import { ExportsService } from './services/exports';
-import { BulkService } from './services/bulk';
 import { UtilityService } from './services/utility';
 
 export interface OathNetClientOptions {
@@ -33,7 +32,6 @@ export class OathNetClient {
   private _victims?: VictimsService;
   private _fileSearch?: FileSearchService;
   private _exports?: ExportsService;
-  private _bulk?: BulkService;
   private _utility?: UtilityService;
 
   constructor(
@@ -174,13 +172,6 @@ export class OathNetClient {
       this._exports = new ExportsService(this);
     }
     return this._exports;
-  }
-
-  get bulk(): BulkService {
-    if (!this._bulk) {
-      this._bulk = new BulkService(this);
-    }
-    return this._bulk;
   }
 
   get utility(): UtilityService {

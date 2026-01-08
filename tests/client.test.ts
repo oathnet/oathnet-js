@@ -52,10 +52,6 @@ describe('OathNetClient', () => {
       expect(client.exports).toBeDefined();
     });
 
-    it('should have bulk service', () => {
-      expect(client.bulk).toBeDefined();
-    });
-
     it('should have utility service', () => {
       expect(client.utility).toBeDefined();
     });

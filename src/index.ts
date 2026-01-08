@@ -32,5 +32,4 @@ export { StealerV2Service } from './services/stealer';
 export { VictimsService } from './services/victims';
 export { FileSearchService } from './services/fileSearch';
 export { ExportsService } from './services/exports';
-export { BulkService } from './services/bulk';
 export { UtilityService } from './services/utility';

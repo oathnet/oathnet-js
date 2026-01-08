@@ -1,6 +1,6 @@
 {
   "name": "oathnet",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Official Node.js SDK and CLI for OathNet API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

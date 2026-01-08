@@ -499,33 +499,6 @@ export interface MinecraftHistoryData {
 }
 
 // ============================================
-// BULK SEARCH RESPONSES
-// ============================================
-
-export interface BulkJobData {
-  id?: string;
-  job_id?: string;
-  user?: string;
-  status?: string; // PENDING, IN_PROGRESS, COMPLETED, FAILED
-  created_at?: string;
-  updated_at?: string;
-  search_service?: string;
-  output_format?: string;
-  results_expired?: boolean;
-  query?: string | null;
-  results_count?: number | null;
-  lookups_deducted?: number | null;
-  _meta?: ResponseMeta;
-}
-
-export interface BulkJobListData {
-  count: number;
-  next?: string | null;
-  previous?: string | null;
-  results: BulkJobData[];
-}
-
-// ============================================
 // V2 HEALTH & ANALYTICS
 // ============================================
 
