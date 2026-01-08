@@ -1,11 +1,11 @@
 {
   "name": "oathnet",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Official Node.js SDK and CLI for OathNet API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "oathnet": "./bin/cli.js"
+    "oathnet": "./dist/bin/cli.js"
   },
   "scripts": {
     "build": "tsc",
