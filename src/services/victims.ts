@@ -88,10 +88,12 @@ export class VictimsService {
       });
     }
 
-    return this.client.get<ApiResponse<V2VictimsData>>(
-      '/service/v2/victims/search',
-      params
-    );
+    const data = await this.client.get<any>('/service/v2/victims/search', params);
+    // Handle wrapped or unwrapped response
+    if ('success' in data) {
+      return data as ApiResponse<V2VictimsData>;
+    }
+    return { success: true, data: data as V2VictimsData };
   }
 
   /**
