@@ -37,6 +37,237 @@ export interface ApiResponse<T> {
 }
 
 // ============================================
+// STRUCTURED FILTERS AND SCANNER RESPONSES
+// ============================================
+
+export type JsonScalar = string | number | boolean;
+export type JsonScalarOrArray = JsonScalar | JsonScalar[];
+
+export type FilterOperator =
+  | 'eq'
+  | 'neq'
+  | 'in'
+  | 'not_in'
+  | 'contains'
+  | 'starts_with'
+  | 'ends_with'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'exists'
+  | 'wildcard';
+
+export type StructuredFilterValue = string | boolean | string[];
+
+export type StructuredFilterNode =
+  | {
+      field: string;
+      operator: FilterOperator;
+      value?: StructuredFilterValue;
+    }
+  | {
+      and: StructuredFilterNode[];
+    }
+  | {
+      or: StructuredFilterNode[];
+    };
+
+export interface SearchQueryConfig {
+  [key: string]:
+    | JsonScalarOrArray
+    | StructuredFilterNode
+    | Record<string, JsonScalarOrArray>
+    | undefined;
+  q?: string;
+  filter?: StructuredFilterNode;
+  filter_id?: string;
+  wildcard?: boolean;
+  logic?: 'and' | 'or';
+  from?: string;
+  to?: string;
+  date_field?: 'indexed_at' | 'pwned_at';
+  sort?: string;
+}
+
+export interface ScannerQueryConfig extends SearchQueryConfig {
+  extra_params?: Record<string, JsonScalarOrArray>;
+}
+
+export type ScannerType = 'stealer' | 'breach';
+export type ScannerStatus = 'active' | 'paused' | 'disabled';
+export type ScannerNotificationType = 'email' | 'webhook' | 'discord';
+export type ScannerRunStatus =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'notification_failed';
+export type ScannerWebhookSecurityMode =
+  | 'api_key'
+  | 'signed_json'
+  | 'signed_encrypted';
+
+export interface Scanner {
+  uid: string;
+  user: string;
+  name: string;
+  scanner_type: ScannerType;
+  scanner_type_display: string;
+  status: ScannerStatus;
+  status_display: string;
+  query_config: ScannerQueryConfig;
+  notification_type: ScannerNotificationType;
+  notification_type_display: string;
+  webhook_url: string | null;
+  webhook_security_mode?: ScannerWebhookSecurityMode;
+  webhook_secret_last_rotated_at?: string | null;
+  notify_on_zero_results: boolean;
+  created_at: string;
+  updated_at: string;
+  last_run_at: string | null;
+  last_found_at: string | null;
+  next_run_at: string | null;
+  total_results_found: number;
+  total_runs: number;
+  consecutive_failures: number;
+}
+
+export interface ScannerQuota {
+  max_scanners: number;
+  current_count: number;
+  remaining: number;
+  can_create: boolean;
+}
+
+export interface ScannerCreateRequest {
+  name: string;
+  scanner_type: ScannerType;
+  query_config: ScannerQueryConfig;
+  notification_type: ScannerNotificationType;
+  webhook_url?: string;
+  webhook_secret?: string;
+  webhook_security_mode?: ScannerWebhookSecurityMode;
+  notify_on_zero_results?: boolean;
+}
+
+export interface ScannerUpdateRequest {
+  name?: string;
+  scanner_type?: ScannerType;
+  query_config?: ScannerQueryConfig;
+  notification_type?: ScannerNotificationType;
+  webhook_url?: string | null;
+  webhook_secret?: string;
+  webhook_security_mode?: ScannerWebhookSecurityMode;
+  notify_on_zero_results?: boolean;
+}
+
+export interface ScannerDraftTestRequest {
+  name?: string;
+  scanner_type: ScannerType;
+  query_config: ScannerQueryConfig;
+  notification_type: ScannerNotificationType;
+  webhook_url?: string;
+  webhook_secret?: string;
+  webhook_security_mode?: ScannerWebhookSecurityMode;
+  notify_on_zero_results?: boolean;
+}
+
+export interface ScannerTestPreview {
+  event_name?: string;
+  search_url?: string;
+  security_mode?: ScannerWebhookSecurityMode | string;
+  verification_method?: string;
+  authorization_scheme?: string;
+  encryption_enabled?: boolean;
+  header_names?: string[];
+  body_kind?: string;
+  body_example?: Record<string, any>;
+}
+
+export interface ScannerTestResponse {
+  success: boolean;
+  notification_type?: string;
+  target?: string;
+  status_code?: number;
+  message?: string;
+  preview?: ScannerTestPreview;
+  generated_webhook_secret?: string;
+}
+
+export interface ScannerTriggerResponse {
+  message?: string;
+  scanner_uid?: string;
+}
+
+export interface ScannerRun {
+  uid: string;
+  status: ScannerRunStatus;
+  status_display: string;
+  started_at: string | null;
+  completed_at: string | null;
+  duration_seconds: number | null;
+  search_from: string;
+  search_to: string;
+  results_count: number;
+  results_sample: unknown[] | null;
+  request_params_used?: Record<string, unknown> | null;
+  execution_meta?: Record<string, unknown> | null;
+  notification_sent: boolean;
+  notification_sent_at: string | null;
+  notification_error: string | null;
+  error_message: string | null;
+}
+
+export interface ScannerNotificationAttempt {
+  uid: string;
+  attempt_number: number;
+  attempted_at: string;
+  success: boolean;
+  response_status_code: number | null;
+  error_message: string | null;
+  response_excerpt?: string | null;
+  delivery_id: string;
+  security_mode: string;
+  target: string;
+}
+
+export interface ScannerRunDetail extends ScannerRun {
+  search_url: string;
+  previous_results_count: number | null;
+  results_delta: number | null;
+  notification_logs: ScannerNotificationAttempt[];
+}
+
+export interface ScannerWebhookSecurityData {
+  scanner_uid: string;
+  notification_type: ScannerNotificationType | string;
+  webhook_security_mode: ScannerWebhookSecurityMode | string;
+  verification_method: string;
+  encryption_enabled: boolean;
+  secret_configured: boolean;
+  secret_preview: string | null;
+  key_id: string | null;
+  last_rotated_at: string | null;
+  headers: string[];
+}
+
+export type ScannerWebhookSecurityResponse =
+  ApiResponse<ScannerWebhookSecurityData>;
+
+export interface ScannerWebhookRotateData {
+  scanner_uid: string;
+  webhook_security_mode: ScannerWebhookSecurityMode | string;
+  secret: string;
+  secret_preview: string | null;
+  key_id: string | null;
+  last_rotated_at: string | null;
+}
+
+export type ScannerWebhookRotateResponse =
+  ApiResponse<ScannerWebhookRotateData>;
+
+// ============================================
 // SEARCH RESPONSES
 // ============================================
 

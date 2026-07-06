@@ -18,6 +18,7 @@ import { VictimsService } from './services/victims';
 import { FileSearchService } from './services/fileSearch';
 import { ExportsService } from './services/exports';
 import { UtilityService } from './services/utility';
+import { ScannersService } from './services/scanners';
 
 export interface OathNetClientOptions {
   baseUrl?: string;
@@ -33,6 +34,7 @@ export class OathNetClient {
   private _fileSearch?: FileSearchService;
   private _exports?: ExportsService;
   private _utility?: UtilityService;
+  private _scanners?: ScannersService;
 
   constructor(
     public readonly apiKey: string,
@@ -80,6 +82,30 @@ export class OathNetClient {
   }
 
   /**
+   * Make a PATCH request to the API
+   */
+  async patch<T>(path: string, data?: any): Promise<T> {
+    try {
+      const response = await this.httpClient.patch<T>(path, data);
+      return this.handleResponse(response);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
+   * Make a DELETE request to the API
+   */
+  async delete<T = void>(path: string): Promise<T> {
+    try {
+      const response = await this.httpClient.delete<T>(path);
+      return this.handleResponse(response);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  /**
    * Download raw bytes from the API
    */
   async getRaw(path: string): Promise<Buffer> {
@@ -94,6 +120,9 @@ export class OathNetClient {
   }
 
   private handleResponse<T>(response: AxiosResponse<T>): T {
+    if (response.status === 204 || response.status === 205) {
+      return undefined as T;
+    }
     return response.data;
   }
 
@@ -179,5 +208,12 @@ export class OathNetClient {
       this._utility = new UtilityService(this);
     }
     return this._utility;
+  }
+
+  get scanners(): ScannersService {
+    if (!this._scanners) {
+      this._scanners = new ScannersService(this);
+    }
+    return this._scanners;
   }
 }

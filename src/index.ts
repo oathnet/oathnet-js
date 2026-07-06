@@ -33,3 +33,4 @@ export { VictimsService } from './services/victims';
 export { FileSearchService } from './services/fileSearch';
 export { ExportsService } from './services/exports';
 export { UtilityService } from './services/utility';
+export { ScannersService } from './services/scanners';
