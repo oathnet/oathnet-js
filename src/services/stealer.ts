@@ -25,6 +25,16 @@ const STEALER_INVESTIGATION_PATH = '/service/v2/stealer/investigation/search';
 const LEGACY_INVESTIGATION_PATH = '/service/v2/investigate/search';
 const PHONEBOOK_PATH = '/service/v2/phonebook';
 
+export interface StealerSubdomainOptions {
+  q?: string;
+  query?: string;
+  alive?: boolean;
+  isAlive?: boolean;
+  is_alive?: boolean;
+  searchId?: string;
+  search_id?: string;
+}
+
 const STEALER_ARRAY_PARAMS: Array<[keyof V2StealerSearchOptions, string]> = [
   ['domains', 'domain[]'],
   ['domain[]', 'domain[]'],
@@ -163,15 +173,38 @@ export class StealerV2Service {
    */
   async subdomain(
     domain: string,
-    query?: string
+    queryOrOptions?: string | StealerSubdomainOptions,
+    options: StealerSubdomainOptions = {}
   ): Promise<ApiResponse<SubdomainData>> {
     const params: Record<string, any> = { domain };
+    const requestOptions =
+      typeof queryOrOptions === 'string'
+        ? { ...options, q: queryOrOptions }
+        : queryOrOptions ?? options;
+    const query = requestOptions.q ?? requestOptions.query;
+    const isAlive =
+      requestOptions.alive ?? requestOptions.isAlive ?? requestOptions.is_alive;
+    const searchId = requestOptions.searchId ?? requestOptions.search_id;
+
     if (query) params.q = query;
+    if (isAlive !== undefined) params.alive = isAlive;
+    if (requestOptions.is_alive !== undefined) params.is_alive = requestOptions.is_alive;
+    if (searchId !== undefined) params.search_id = searchId;
 
     return this.client.get<ApiResponse<SubdomainData>>(
       STEALER_SUBDOMAIN_PATH,
       params
     );
+  }
+
+  /**
+   * OperationId-compatible alias for GET /service/v2/stealer/subdomain.
+   */
+  async extractSubdomainV2(
+    domain: string,
+    options: StealerSubdomainOptions = {}
+  ): Promise<ApiResponse<SubdomainData>> {
+    return this.subdomain(domain, options);
   }
 
   /**

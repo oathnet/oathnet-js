@@ -4,6 +4,7 @@
 
 import { OathNetClient } from '../../src';
 import { OSINTService } from '../../src/services/osint';
+import type { ApiResponse, ExtractSubdomainData, GHuntData } from '../../src';
 import { getApiKey, TEST_DATA } from '../helpers';
 
 describe('OSINTService', () => {
@@ -140,6 +141,61 @@ describe('OSINTService', () => {
       expect(get).toHaveBeenCalledWith('/service/extract-subdomain', {
         domain: 'example.com',
         search_id: 'search-123',
+      });
+    });
+
+    it('types the current GHunt response shape', async () => {
+      const { get, service } = createService();
+      const response: ApiResponse<GHuntData> = {
+        success: true,
+        data: {
+          status: 'found',
+          data: {
+            profile: {
+              Name: 'Alice Example',
+              'Profile Picture': 'https://example.com/avatar.png',
+              'Gaia ID': 'gaia-123',
+              'Last Update': '2026-01-01',
+            },
+            maps_reviews: 'none',
+            photos_url: 'https://photos.example.com',
+          },
+        },
+        errors: {
+          error: '',
+          details: '',
+        },
+      };
+      get.mockResolvedValue(response);
+
+      const result = await service.ghunt('person@example.com');
+
+      expect(result.data?.status).toBe('found');
+      expect(result.data?.data?.profile?.['Gaia ID']).toBe('gaia-123');
+      expect(result.errors?.details).toBe('');
+    });
+
+    it('types string and object entries for extractSubdomain', async () => {
+      const { get, service } = createService();
+      const response: ApiResponse<ExtractSubdomainData> = {
+        success: true,
+        data: {
+          domain: 'example.com',
+          subdomains: [
+            'www.example.com',
+            { subdomain: 'api.example.com', alive: true },
+          ],
+          count: 2,
+        },
+      };
+      get.mockResolvedValue(response);
+
+      const result = await service.extractSubdomain('example.com', true);
+
+      expect(result.data?.subdomains[0]).toBe('www.example.com');
+      expect(result.data?.subdomains[1]).toEqual({
+        subdomain: 'api.example.com',
+        alive: true,
       });
     });
   });

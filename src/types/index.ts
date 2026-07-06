@@ -34,6 +34,7 @@ export interface ApiResponse<T> {
   success: boolean;
   message?: string;
   data?: T;
+  errors?: Record<string, unknown>;
 }
 
 // ============================================
@@ -496,9 +497,11 @@ export interface V2StealerData {
 }
 
 export interface SubdomainData {
-  subdomains: string[];
+  subdomains: ExtractSubdomainEntry[];
   count: number;
   domain: string;
+  alive_results?: Record<string, unknown>;
+  source?: string;
   _meta?: ResponseMeta;
 }
 
@@ -1621,8 +1624,24 @@ export interface HoleheData {
 }
 
 export interface GHuntData {
-  email: string;
-  found: boolean;
+  status?: string;
+  data?: {
+    profile?: {
+      Name?: string;
+      'Profile Picture'?: string;
+      'Gaia ID'?: string;
+      'Last Update'?: string;
+      [key: string]: unknown;
+    };
+    maps_reviews?: string;
+    photos_url?: string;
+    [key: string]: unknown;
+  };
+  _meta?: ResponseMeta;
+
+  // Legacy fields kept for older SDK consumers.
+  email?: string;
+  found?: boolean;
   profile?: {
     name?: string;
     profile_picture?: string;
@@ -1630,14 +1649,24 @@ export interface GHuntData {
     last_edit?: string;
     maps_id?: string;
     calendar_id?: string;
+    [key: string]: unknown;
   };
-  _meta?: ResponseMeta;
   [key: string]: any;
 }
 
+export type ExtractSubdomainEntry =
+  | string
+  | {
+      subdomain?: string;
+      domain?: string;
+      alive?: boolean;
+      is_alive?: boolean;
+      [key: string]: unknown;
+    };
+
 export interface ExtractSubdomainData {
-  domain: string;
-  subdomains: string[];
+  domain?: string;
+  subdomains: ExtractSubdomainEntry[];
   count: number;
   _meta?: ResponseMeta;
 }

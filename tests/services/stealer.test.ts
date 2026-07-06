@@ -501,6 +501,73 @@ describe('StealerV2Service', () => {
       expect(result.success).toBe(true);
     });
 
+    it('extracts V2 subdomains with alive aliases and search_id', async () => {
+      const { get, service } = createService();
+      get.mockResolvedValue({
+        success: true,
+        data: {
+          domain: 'example.com',
+          subdomains: [
+            'app.example.com',
+            { subdomain: 'api.example.com', alive: true },
+          ],
+          count: 2,
+          alive_results: {
+            'app.example.com': { alive: false },
+          },
+          source: 'stealer',
+        },
+      });
+
+      const result = await service.subdomain('example.com', {
+        q: 'mail',
+        alive: true,
+        is_alive: false,
+        searchId: 'sess_123',
+      });
+
+      expect(get).toHaveBeenCalledWith('/service/v2/stealer/subdomain', {
+        domain: 'example.com',
+        q: 'mail',
+        alive: true,
+        is_alive: false,
+        search_id: 'sess_123',
+      });
+      expect(result.data?.alive_results?.['app.example.com']).toEqual({
+        alive: false,
+      });
+      expect(result.data?.subdomains[1]).toEqual({
+        subdomain: 'api.example.com',
+        alive: true,
+      });
+    });
+
+    it('provides the extractSubdomainV2 operation alias', async () => {
+      const { get, service } = createService();
+      get.mockResolvedValue({
+        success: true,
+        data: {
+          domain: 'example.com',
+          subdomains: ['app.example.com'],
+          count: 1,
+          source: 'stealer',
+        },
+      });
+
+      await service.extractSubdomainV2('example.com', {
+        query: 'mail',
+        isAlive: true,
+        search_id: 'sess_123',
+      });
+
+      expect(get).toHaveBeenCalledWith('/service/v2/stealer/subdomain', {
+        domain: 'example.com',
+        q: 'mail',
+        alive: true,
+        search_id: 'sess_123',
+      });
+    });
+
     it.skip('should support cursor pagination', async () => {
       // Skipping: V2 stealer cursor pagination has known issues
     });
