@@ -6,6 +6,9 @@ import { OathNetClient } from '../client';
 import {
   ApiResponse,
   StructuredFilterNode,
+  V2AIContextResponse,
+  V2AIFilterRequest,
+  V2AIResponse,
   V2AutocompleteDBNamesResponse,
   V2AutocompleteFieldsResponse,
   V2AutocompleteValueResponse,
@@ -19,6 +22,7 @@ import {
 } from '../types';
 
 const BREACH_SEARCH_PATH = '/service/v2/breach/search';
+const AI_FILTER_PATH = '/service/v2/ai/filter';
 const BREACH_AUTOCOMPLETE_PATH = '/service/v2/breach/autocomplete';
 const BREACH_AUTOCOMPLETE_DBNAMES_PATH =
   '/service/v2/breach/autocomplete/dbnames';
@@ -106,6 +110,44 @@ const KNOWN_SEARCH_OPTION_KEYS = new Set<string>([
 
 export class BreachV2Service {
   constructor(private client: OathNetClient) {}
+
+  /**
+   * Translate natural language into a reusable structured filter context.
+   */
+  async createAIFilter(
+    request: V2AIFilterRequest
+  ): Promise<V2AIResponse> {
+    return this.client.post<V2AIResponse>(AI_FILTER_PATH, request);
+  }
+
+  /**
+   * OperationId-compatible alias for POST /service/v2/ai/filter.
+   */
+  async createAIFilterV2(
+    request: V2AIFilterRequest
+  ): Promise<V2AIResponse> {
+    return this.createAIFilter(request);
+  }
+
+  /**
+   * Fetch a previously created AI filter context.
+   */
+  async getAIFilterContext(
+    filterId: string
+  ): Promise<V2AIContextResponse> {
+    return this.client.get<V2AIContextResponse>(
+      `${AI_FILTER_PATH}/${this.encode(filterId)}`
+    );
+  }
+
+  /**
+   * OperationId-compatible alias for GET /service/v2/ai/filter/{filter_id}.
+   */
+  async getAIFilterContextV2(
+    filterId: string
+  ): Promise<V2AIContextResponse> {
+    return this.getAIFilterContext(filterId);
+  }
 
   /**
    * Search V2 breach records.
@@ -384,5 +426,9 @@ export class BreachV2Service {
 
     const query = searchParams.toString();
     return query ? `${path}?${query}` : path;
+  }
+
+  private encode(value: string): string {
+    return encodeURIComponent(value);
   }
 }

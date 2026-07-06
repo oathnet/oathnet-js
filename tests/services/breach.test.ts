@@ -6,6 +6,7 @@ import { OathNetClient } from '../../src';
 import { BreachV2Service } from '../../src/services/breach';
 import {
   StructuredFilterNode,
+  V2AIFilterRequest,
   V2BreachSearchPostBody,
 } from '../../src/types';
 
@@ -26,6 +27,69 @@ describe('BreachV2Service', () => {
 
     expect(client.breach).toBeDefined();
     expect(client.breach).toBe(client.breach);
+  });
+
+  it('creates AI filter contexts with the documented JSON body and raw response', async () => {
+    const { post, service } = createService();
+    const request: V2AIFilterRequest = {
+      index: 'breach',
+      query: 'US gmail users with LinkedIn records after 2020',
+      filter_id: '0123456789abcdef01234567',
+    };
+    const filter: StructuredFilterNode = {
+      and: [
+        { field: 'country', operator: 'eq', value: 'US' },
+        { field: 'email_domain', operator: 'eq', value: 'gmail.com' },
+        { field: 'dbname', operator: 'contains', value: 'linkedin' },
+        {
+          field: 'indexed_at',
+          operator: 'gte',
+          value: '2020-01-01T00:00:00Z',
+        },
+      ],
+    };
+    post.mockResolvedValue({
+      filter_id: 'fedcba987654321001234567',
+      filter,
+    });
+
+    const result = await service.createAIFilterV2(request);
+
+    expect(result.filter_id).toBe('fedcba987654321001234567');
+    expect(result.filter).toBe(filter);
+    expect(post).toHaveBeenCalledWith('/service/v2/ai/filter', request);
+  });
+
+  it('gets AI filter context with an encoded filter_id path and raw context response', async () => {
+    const { get, service } = createService();
+    const filter: StructuredFilterNode = {
+      field: 'country',
+      operator: 'eq',
+      value: 'US',
+    };
+    get.mockResolvedValue({
+      id: '0123456789abcdef01234567',
+      index_type: 'breach',
+      query: 'US gmail users',
+      filter,
+      sample_data: { country: 'US' },
+      field_values: { country: ['US'] },
+      total_hits: 42,
+      history: [{ query: 'US users', filter }],
+      source: 'ai',
+      parent_id: null,
+      created_at: '2026-04-13T08:59:19Z',
+      expires_at: '2026-04-13T09:29:19Z',
+    });
+
+    const result = await service.getAIFilterContextV2('filter/with space');
+
+    expect(result.id).toBe('0123456789abcdef01234567');
+    expect(result.field_values?.country).toEqual(['US']);
+    expect(result.history?.[0].filter).toBe(filter);
+    expect(get).toHaveBeenCalledWith(
+      '/service/v2/ai/filter/filter%2Fwith%20space'
+    );
   });
 
   it('searches V2 breach records with documented GET params', async () => {

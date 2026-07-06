@@ -73,6 +73,8 @@ export type StructuredFilterNode =
       or: StructuredFilterNode[];
     };
 
+export type FilterContextId = string;
+
 export interface SearchQueryConfig {
   [key: string]:
     | JsonScalarOrArray
@@ -587,6 +589,44 @@ export interface V2BreachAutocompleteDBNamesOptions {
 
 export interface V2BreachAutocompleteFieldsOptions {
   limit?: number;
+}
+
+export type V2AIFilterIndex =
+  | 'breach'
+  | 'docs'
+  | 'victims'
+  | 'investigation'
+  | 'stealer_investigation';
+
+export interface V2AIFilterRequest {
+  query: string;
+  index?: V2AIFilterIndex;
+  filter_id?: FilterContextId;
+}
+
+export interface V2AIResponse {
+  filter_id?: FilterContextId;
+  filter?: StructuredFilterNode;
+}
+
+export interface V2AIHistoryItem {
+  query?: string;
+  filter?: StructuredFilterNode;
+}
+
+export interface V2AIContextResponse {
+  id?: FilterContextId;
+  index_type?: string;
+  query?: string;
+  filter?: StructuredFilterNode;
+  sample_data?: Record<string, unknown>;
+  field_values?: Record<string, string[]>;
+  total_hits?: number;
+  history?: V2AIHistoryItem[];
+  source?: string;
+  parent_id?: FilterContextId | null;
+  created_at?: string;
+  expires_at?: string;
 }
 
 // ============================================
