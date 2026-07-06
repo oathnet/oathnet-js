@@ -390,6 +390,288 @@ export interface SubdomainData {
   _meta?: ResponseMeta;
 }
 
+export interface V2PhonebookSubdomainInsight {
+  domain?: string;
+  count?: number;
+  latest_pwned_at?: string;
+  latest_indexed_at?: string;
+  redacted?: boolean;
+  [key: string]: any;
+}
+
+export interface V2PhonebookEmailInsight {
+  email?: string;
+  count?: number;
+  stealer_count?: number;
+  breach_result_count?: number;
+  breach_count?: number;
+  latest_pwned_at?: string;
+  latest_indexed_at?: string;
+  redacted?: boolean;
+  [key: string]: any;
+}
+
+export interface V2PhonebookResponse {
+  domain?: string;
+  subdomains?: string[];
+  subdomain_results?: V2PhonebookSubdomainInsight[];
+  emails?: V2PhonebookEmailInsight[];
+  count?: number;
+  email_count?: number;
+  policy_redacted?: boolean;
+  upgrade_required?: boolean;
+  redaction_marker?: string;
+  message?: string;
+  visible_subdomain_limit?: number | null;
+  visible_email_limit?: number | null;
+  redacted_subdomain_count?: number;
+  redacted_email_count?: number;
+  [key: string]: any;
+}
+
+export interface V2PhonebookOptions {
+  domain?: string;
+  q?: string;
+  alive?: boolean;
+  isAlive?: boolean;
+  is_alive?: boolean;
+  searchId?: string;
+  search_id?: string;
+}
+
+export type V2PhonebookRequest =
+  | (V2PhonebookOptions & { domain: string })
+  | (V2PhonebookOptions & { q: string });
+
+export type V2InvestigationScope =
+  | 'all'
+  | 'both'
+  | 'credentials'
+  | 'victims'
+  | 'evidence'
+  | 'properties'
+  | 'files'
+  | 'related_credentials';
+
+export type V2InvestigationIncludeSection =
+  | 'credentials'
+  | 'victims'
+  | 'evidence'
+  | 'files'
+  | 'related_credentials';
+
+export type V2InvestigationFilterMode = 'fanout' | 'intersect';
+export type V2InvestigationView = 'enriched';
+
+export interface V2InvestigationSearchOptions {
+  q?: string;
+  scope?: V2InvestigationScope;
+  include?: V2InvestigationIncludeSection[] | string;
+  pageSize?: number;
+  page_size?: number;
+  searchId?: string;
+  search_id?: string;
+  filter?: StructuredFilterNode | string;
+  filterId?: string;
+  filter_id?: string;
+  filterMode?: V2InvestigationFilterMode;
+  filter_mode?: V2InvestigationFilterMode;
+  compact?: boolean;
+  view?: V2InvestigationView;
+  includeCookieEvidence?: boolean;
+  include_cookie_evidence?: boolean;
+  excludeCookieEvidence?: boolean;
+  exclude_cookie_evidence?: boolean;
+}
+
+export type V2InvestigationSectionFilters = Partial<
+  Record<
+    'credentials' | 'victims' | 'evidence' | 'files',
+    Record<string, JsonScalarOrArray | undefined>
+  >
+>;
+
+export type V2InvestigationSectionCursors = Partial<
+  Record<
+    | 'credentials'
+    | 'victims'
+    | 'evidence'
+    | 'properties'
+    | 'files'
+    | 'related_credentials',
+    string | null
+  >
+>;
+
+export interface V2InvestigationSearchRequest {
+  [key: string]: unknown;
+  q?: string;
+  scope?: V2InvestigationScope;
+  include?: V2InvestigationIncludeSection[];
+  filter_mode?: V2InvestigationFilterMode;
+  filterMode?: V2InvestigationFilterMode;
+  compact?: boolean;
+  page_size?: number;
+  pageSize?: number;
+  view?: V2InvestigationView;
+  search_id?: string;
+  searchId?: string;
+  wildcard?: boolean;
+  from?: string;
+  to?: string;
+  date_field?: 'indexed_at' | 'pwned_at';
+  dateField?: 'indexed_at' | 'pwned_at';
+  log_id?: string;
+  logId?: string;
+  has_log_id?: boolean;
+  hasLogId?: boolean;
+  sort?: string;
+  fields?: string[];
+  filter?: StructuredFilterNode;
+  filter_id?: string;
+  filterId?: string;
+  filters?: V2InvestigationSectionFilters;
+  cursors?: V2InvestigationSectionCursors;
+  include_cookie_evidence?: boolean;
+  includeCookieEvidence?: boolean;
+  exclude_cookie_evidence?: boolean;
+  excludeCookieEvidence?: boolean;
+}
+
+export interface V2FileMetadataResult {
+  log_id?: string;
+  file_id?: string;
+  name?: string;
+  folder?: string;
+  path?: string;
+  ext?: string;
+  kind?: string;
+  size_bytes?: number;
+  [key: string]: any;
+}
+
+export interface V2FileMetadataSearchResponse {
+  items?: V2FileMetadataResult[];
+  meta?: V2SearchMeta;
+  next_cursor?: string;
+  policy_redacted?: boolean;
+  upgrade_required?: boolean;
+  redaction_marker?: string;
+  [key: string]: any;
+}
+
+export interface V2VictimPropertyResult {
+  log_id?: string;
+  property_id?: string;
+  property_type?: string;
+  service?: string;
+  identity_kind?: string;
+  account_id?: string;
+  username?: string;
+  display_name?: string;
+  value?: string;
+  domain?: string;
+  active?: boolean;
+  source_type?: string;
+  source_path?: string;
+  source_file_id?: string;
+  confidence?: number;
+  confidence_label?: string;
+  confidence_score?: number;
+  indexed_at?: string;
+  [key: string]: any;
+}
+
+export interface V2VictimPropertiesSearchResponse {
+  items?: V2VictimPropertyResult[];
+  meta?: V2SearchMeta;
+  next_cursor?: string;
+  policy_redacted?: boolean;
+  upgrade_required?: boolean;
+  redaction_marker?: string;
+  [key: string]: any;
+}
+
+export interface V2InvestigationSections {
+  credentials?: V2StealerData;
+  victims?: V2VictimsData;
+  evidence?: V2VictimPropertiesSearchResponse;
+  files?: V2FileMetadataSearchResponse;
+  related_credentials?: V2StealerData;
+}
+
+export interface V2InvestigationLinkEndpoint {
+  section?: string;
+  id?: string;
+  log_id?: string;
+}
+
+export interface V2InvestigationLink {
+  relation_type?: string;
+  display_label?: string;
+  log_id?: string;
+  source?: V2InvestigationLinkEndpoint;
+  target?: V2InvestigationLinkEndpoint;
+  matched_field?: string;
+  matched_value_label?: string;
+  credential_id?: string;
+  property_id?: string;
+  file_id?: string;
+  confidence?: number;
+  reason?: string;
+  [key: string]: any;
+}
+
+export interface V2InvestigationRelation {
+  type?: string;
+  log_id?: string;
+  credential_id?: string;
+  property_id?: string;
+  file_id?: string;
+  reason?: string;
+  evidence?: string;
+  [key: string]: any;
+}
+
+export interface V2InvestigationSectionError {
+  section?: string;
+  error?: string;
+  code?: string;
+  reason?: string;
+  [key: string]: any;
+}
+
+export interface V2InvestigationIntersection {
+  mode?: string;
+  applied?: boolean;
+  constraints?: Record<string, number>;
+  candidate_cap?: number;
+  truncated?: boolean;
+}
+
+export interface V2InvestigationSearchData {
+  query?: string;
+  scope?: string;
+  sections?: V2InvestigationSections;
+  credentials?: V2StealerData;
+  victims?: V2VictimsData;
+  evidence?: V2VictimPropertiesSearchResponse;
+  properties?: V2VictimPropertiesSearchResponse;
+  files?: V2FileMetadataSearchResponse;
+  related_credentials?: V2StealerData;
+  links?: V2InvestigationLink[];
+  relations?: V2InvestigationRelation[];
+  section_errors?: Record<string, V2InvestigationSectionError>;
+  intersection?: V2InvestigationIntersection;
+  policy_redacted?: boolean;
+  upgrade_required?: boolean;
+  redaction_marker?: string;
+  [key: string]: any;
+}
+
+export type V2InvestigationSearchResponse =
+  ApiResponse<V2InvestigationSearchData>;
+
 // ============================================
 // V2 BREACH RESPONSES
 // ============================================
