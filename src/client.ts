@@ -123,6 +123,24 @@ export class OathNetClient {
     }
   }
 
+  /**
+   * Download plain text from the API
+   */
+  async getText(path: string, params?: Record<string, any>): Promise<string> {
+    try {
+      const response = await this.httpClient.get<string>(path, {
+        params,
+        responseType: 'text',
+        headers: {
+          Accept: 'text/plain',
+        },
+      });
+      return this.handleResponse(response);
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   private handleResponse<T>(response: AxiosResponse<T>): T {
     if (response.status === 204 || response.status === 205) {
       return undefined as T;

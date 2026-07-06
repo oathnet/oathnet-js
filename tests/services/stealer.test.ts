@@ -39,6 +39,136 @@ describe('StealerV2Service', () => {
       expect(localClient.stealer).toBe(localClient.stealer);
     });
 
+    it('searches V2 stealer records with documented GET params', async () => {
+      const { get, service } = createService();
+      const filter: StructuredFilterNode = {
+        and: [
+          { field: 'domain', operator: 'eq', value: 'example.com' },
+          { field: 'has_log_id', operator: 'eq', value: true },
+        ],
+      };
+      get.mockResolvedValue({
+        success: true,
+        data: {
+          items: [],
+          meta: { count: 0, took_ms: 3 },
+        },
+      });
+
+      const result = await service.searchStealerV2('alice@example.com', {
+        cursor: 'cursor/with space',
+        pageSize: 25,
+        sort: '-indexed_at',
+        from: '2026-01-01T00:00:00Z',
+        to: '2026-01-31T23:59:59Z',
+        dateField: 'indexed_at',
+        logId: 'log-123',
+        hasLogId: true,
+        wildcard: true,
+        logic: 'and',
+        filter,
+        filterId: '0123456789abcdef01234567',
+        domains: ['example.com'],
+        subdomains: ['accounts.example.com'],
+        usernames: ['alice'],
+        passwords: ['secret'],
+        passwordHashes: ['sha256:value'],
+        paths: ['/Users/Alice/AppData'],
+        emails: ['alice@example.com'],
+        emailDomains: ['example.com'],
+        ips: ['203.0.113.10'],
+        hwids: ['hwid-1'],
+        discordIds: ['1234567890'],
+        sourceTypes: ['stealer'],
+        archiveHashes: ['archive-hash'],
+        canonicalCredentialIds: ['cred-1'],
+        fields: ['url_str', 'domain'],
+        searchId: 'session-123',
+        view: 'enriched',
+      });
+
+      expect(result.success).toBe(true);
+      expect(get).toHaveBeenCalledWith('/service/v2/stealer/search', {
+        q: 'alice@example.com',
+        cursor: 'cursor/with space',
+        page_size: 25,
+        sort: '-indexed_at',
+        from: '2026-01-01T00:00:00Z',
+        to: '2026-01-31T23:59:59Z',
+        date_field: 'indexed_at',
+        log_id: 'log-123',
+        has_log_id: true,
+        wildcard: true,
+        logic: 'and',
+        filter: JSON.stringify(filter),
+        filter_id: '0123456789abcdef01234567',
+        search_id: 'session-123',
+        view: 'enriched',
+        'domain[]': ['example.com'],
+        'subdomain[]': ['accounts.example.com'],
+        'username[]': ['alice'],
+        'password[]': ['secret'],
+        'password_hash[]': ['sha256:value'],
+        'path[]': ['/Users/Alice/AppData'],
+        'email[]': ['alice@example.com'],
+        'email_domain[]': ['example.com'],
+        'ip[]': ['203.0.113.10'],
+        'hwid[]': ['hwid-1'],
+        'discord_id[]': ['1234567890'],
+        'source_type[]': ['stealer'],
+        'archive_hash[]': ['archive-hash'],
+        'canonical_credential_id[]': ['cred-1'],
+        'fields[]': ['url_str', 'domain'],
+      });
+    });
+
+    it('posts V2 stealer JSON filters through the single operation alias', async () => {
+      const { post, service } = createService();
+      const filter: StructuredFilterNode = {
+        field: 'domain',
+        operator: 'eq',
+        value: 'example.com',
+      };
+      post.mockResolvedValue({
+        success: true,
+        data: {
+          items: [{ id: 'cred-1', domain: ['example.com'] }],
+          meta: { count: 1, took_ms: 4 },
+        },
+      });
+
+      const result = await service.searchStealerV2Post(
+        {
+          filter,
+          filterId: 'fedcba987654321001234567',
+          q: 'example.com',
+        },
+        {
+          cursor: 'cursor/with space',
+          page_size: 50,
+          sort: '-pwned_at',
+          from: '2026-01-01T00:00:00Z',
+          to: '2026-01-31T23:59:59Z',
+          date_field: 'pwned_at',
+          fields: ['url_str', 'password'],
+          search_id: 'session-post',
+          view: 'enriched',
+        }
+      );
+
+      expect(result.data?.items[0].id).toBe('cred-1');
+      expect(post).toHaveBeenCalledWith(
+        '/service/v2/stealer/search?cursor=cursor%2Fwith+space&page_size=50&sort=-pwned_at&from=2026-01-01T00%3A00%3A00Z&to=2026-01-31T23%3A59%3A59Z&date_field=pwned_at&search_id=session-post&view=enriched&fields%5B%5D=url_str&fields%5B%5D=password',
+        {
+          filter,
+          q: 'example.com',
+          filter_id: 'fedcba987654321001234567',
+        }
+      );
+      expect(typeof service.searchPost).toBe('function');
+      expect(typeof service.searchStealerV2Post).toBe('function');
+    });
+
     it('runs canonical GET investigation search with documented query params', async () => {
       const { get, service } = createService();
       const filter: StructuredFilterNode = {

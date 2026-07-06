@@ -13,6 +13,9 @@ import {
   V2PhonebookOptions,
   V2PhonebookRequest,
   V2PhonebookResponse,
+  V2SearchPostBody,
+  V2StealerSearchOptions,
+  V2StealerSearchPostOptions,
   V2StealerData,
 } from '../types';
 
@@ -22,23 +25,65 @@ const STEALER_INVESTIGATION_PATH = '/service/v2/stealer/investigation/search';
 const LEGACY_INVESTIGATION_PATH = '/service/v2/investigate/search';
 const PHONEBOOK_PATH = '/service/v2/phonebook';
 
-export interface StealerSearchOptions {
-  cursor?: string;
-  pageSize?: number;
-  sort?: string;
-  wildcard?: boolean;
-  logId?: string;
-  hasLogId?: boolean;
-  from?: string;
-  to?: string;
-  domains?: string[];
-  subdomains?: string[];
-  usernames?: string[];
-  passwords?: string[];
-  paths?: string[];
-  fields?: string[];
-  searchId?: string;
-}
+const STEALER_ARRAY_PARAMS: Array<[keyof V2StealerSearchOptions, string]> = [
+  ['domains', 'domain[]'],
+  ['domain[]', 'domain[]'],
+  ['subdomains', 'subdomain[]'],
+  ['subdomain[]', 'subdomain[]'],
+  ['usernames', 'username[]'],
+  ['username[]', 'username[]'],
+  ['passwords', 'password[]'],
+  ['password[]', 'password[]'],
+  ['passwordHashes', 'password_hash[]'],
+  ['password_hash[]', 'password_hash[]'],
+  ['paths', 'path[]'],
+  ['path[]', 'path[]'],
+  ['emails', 'email[]'],
+  ['email[]', 'email[]'],
+  ['emailDomains', 'email_domain[]'],
+  ['email_domain[]', 'email_domain[]'],
+  ['ips', 'ip[]'],
+  ['ip[]', 'ip[]'],
+  ['hwids', 'hwid[]'],
+  ['hwid[]', 'hwid[]'],
+  ['discordIds', 'discord_id[]'],
+  ['discord_id[]', 'discord_id[]'],
+  ['sourceTypes', 'source_type[]'],
+  ['source_type[]', 'source_type[]'],
+  ['archiveHashes', 'archive_hash[]'],
+  ['archive_hash[]', 'archive_hash[]'],
+  ['canonicalCredentialIds', 'canonical_credential_id[]'],
+  ['canonical_credential_id[]', 'canonical_credential_id[]'],
+  ['fields', 'fields[]'],
+  ['fields[]', 'fields[]'],
+];
+
+const KNOWN_STEALER_SEARCH_OPTION_KEYS = new Set<string>([
+  'q',
+  'cursor',
+  'pageSize',
+  'page_size',
+  'sort',
+  'wildcard',
+  'logic',
+  'logId',
+  'log_id',
+  'hasLogId',
+  'has_log_id',
+  'from',
+  'to',
+  'dateField',
+  'date_field',
+  'filter',
+  'filterId',
+  'filter_id',
+  'searchId',
+  'search_id',
+  'view',
+  ...STEALER_ARRAY_PARAMS.map(([key]) => key as string),
+]);
+
+export interface StealerSearchOptions extends V2StealerSearchOptions {}
 
 export class StealerV2Service {
   constructor(private client: OathNetClient) {}
@@ -48,59 +93,65 @@ export class StealerV2Service {
    */
   async search(
     query?: string,
+    options?: StealerSearchOptions
+  ): Promise<ApiResponse<V2StealerData>>;
+  async search(
+    options?: StealerSearchOptions
+  ): Promise<ApiResponse<V2StealerData>>;
+  async search(
+    queryOrOptions?: string | StealerSearchOptions,
     options: StealerSearchOptions = {}
   ): Promise<ApiResponse<V2StealerData>> {
-    const params: Record<string, any> = {};
+    return this.searchWithOptions(queryOrOptions, options);
+  }
 
-    if (query) params.q = query;
-    if (options.cursor) params.cursor = options.cursor;
-    if (options.pageSize) params.page_size = options.pageSize;
-    if (options.sort) params.sort = options.sort;
-    if (options.wildcard !== undefined) params.wildcard = options.wildcard;
-    if (options.logId) params.log_id = options.logId;
-    if (options.hasLogId !== undefined) params.has_log_id = options.hasLogId;
-    if (options.from) params.from = options.from;
-    if (options.to) params.to = options.to;
-    if (options.searchId) params.search_id = options.searchId;
+  /**
+   * OperationId-compatible alias for GET /service/v2/stealer/search.
+   */
+  async searchStealerV2(
+    query?: string,
+    options?: StealerSearchOptions
+  ): Promise<ApiResponse<V2StealerData>>;
+  async searchStealerV2(
+    options?: StealerSearchOptions
+  ): Promise<ApiResponse<V2StealerData>>;
+  async searchStealerV2(
+    queryOrOptions?: string | StealerSearchOptions,
+    options: StealerSearchOptions = {}
+  ): Promise<ApiResponse<V2StealerData>> {
+    return this.searchWithOptions(queryOrOptions, options);
+  }
 
-    // Array filters use [] suffix
-    if (options.domains) {
-      options.domains.forEach((d) => {
-        params['domain[]'] = params['domain[]'] || [];
-        params['domain[]'].push(d);
-      });
-    }
-    if (options.subdomains) {
-      options.subdomains.forEach((s) => {
-        params['subdomain[]'] = params['subdomain[]'] || [];
-        params['subdomain[]'].push(s);
-      });
-    }
-    if (options.usernames) {
-      options.usernames.forEach((u) => {
-        params['username[]'] = params['username[]'] || [];
-        params['username[]'].push(u);
-      });
-    }
-    if (options.passwords) {
-      options.passwords.forEach((p) => {
-        params['password[]'] = params['password[]'] || [];
-        params['password[]'].push(p);
-      });
-    }
-    if (options.paths) {
-      options.paths.forEach((p) => {
-        params['path[]'] = params['path[]'] || [];
-        params['path[]'].push(p);
-      });
-    }
-    if (options.fields) {
-      options.fields.forEach((f) => {
-        params['fields[]'] = params['fields[]'] || [];
-        params['fields[]'].push(f);
-      });
-    }
+  /**
+   * Search V2 stealer records with a JSON filter body.
+   */
+  async searchPost(
+    body: V2SearchPostBody = {},
+    options: V2StealerSearchPostOptions = {}
+  ): Promise<ApiResponse<V2StealerData>> {
+    const params = this.buildSearchPostParams(options);
+    const path = this.buildPathWithQuery(STEALER_SEARCH_PATH, params);
+    const data = this.normalizeSearchPostBody(body);
 
+    return this.client.post<ApiResponse<V2StealerData>>(path, data);
+  }
+
+  /**
+   * OperationId-compatible alias for POST /service/v2/stealer/search.
+   */
+  async searchStealerV2Post(
+    body: V2SearchPostBody = {},
+    options: V2StealerSearchPostOptions = {}
+  ): Promise<ApiResponse<V2StealerData>> {
+    return this.searchPost(body, options);
+  }
+
+  private async searchWithOptions(
+    queryOrOptions?: string | StealerSearchOptions,
+    options: StealerSearchOptions = {}
+  ): Promise<ApiResponse<V2StealerData>> {
+    const searchOptions = this.normalizeSearchOptions(queryOrOptions, options);
+    const params = this.buildSearchParams(searchOptions);
     return this.client.get<ApiResponse<V2StealerData>>(
       STEALER_SEARCH_PATH,
       params
@@ -280,6 +331,109 @@ export class StealerV2Service {
     return queryOrOptions ?? {};
   }
 
+  private normalizeSearchOptions(
+    queryOrOptions?: string | StealerSearchOptions,
+    options: StealerSearchOptions = {}
+  ): StealerSearchOptions {
+    if (typeof queryOrOptions === 'string') {
+      return { ...options, q: queryOrOptions };
+    }
+    return queryOrOptions ?? {};
+  }
+
+  private buildSearchParams(options: StealerSearchOptions): Record<string, any> {
+    const params: Record<string, any> = {};
+
+    this.assign(params, 'q', options.q);
+    this.assign(params, 'cursor', options.cursor);
+    this.assign(params, 'page_size', options.pageSize ?? options.page_size);
+    this.assign(params, 'sort', options.sort);
+    this.assign(params, 'from', options.from);
+    this.assign(params, 'to', options.to);
+    this.assign(params, 'date_field', options.dateField ?? options.date_field);
+    this.assign(params, 'log_id', options.logId ?? options.log_id);
+    this.assign(params, 'has_log_id', options.hasLogId ?? options.has_log_id);
+    this.assign(params, 'wildcard', options.wildcard);
+    this.assign(params, 'logic', options.logic);
+    this.assign(params, 'filter', this.serializeFilter(options.filter));
+    this.assign(params, 'filter_id', options.filterId ?? options.filter_id);
+    this.assign(params, 'search_id', options.searchId ?? options.search_id);
+    this.assign(params, 'view', options.view);
+
+    for (const [optionKey, paramKey] of STEALER_ARRAY_PARAMS) {
+      this.addArrayParam(params, paramKey, options[optionKey]);
+    }
+
+    for (const [key, value] of Object.entries(options)) {
+      if (
+        value !== undefined &&
+        !KNOWN_STEALER_SEARCH_OPTION_KEYS.has(key) &&
+        key.endsWith('[]')
+      ) {
+        this.addArrayParam(params, key, value);
+      }
+    }
+
+    return params;
+  }
+
+  private buildSearchPostParams(
+    options: V2StealerSearchPostOptions
+  ): Record<string, any> {
+    const params: Record<string, any> = {};
+    this.assign(params, 'cursor', options.cursor);
+    this.assign(params, 'page_size', options.pageSize ?? options.page_size);
+    this.assign(params, 'sort', options.sort);
+    this.assign(params, 'from', options.from);
+    this.assign(params, 'to', options.to);
+    this.assign(params, 'date_field', options.dateField ?? options.date_field);
+    this.assign(params, 'search_id', options.searchId ?? options.search_id);
+    this.assign(params, 'view', options.view);
+    this.addArrayParam(params, 'fields[]', options.fields ?? options['fields[]']);
+
+    for (const [key, value] of Object.entries(options)) {
+      if (
+        value !== undefined &&
+        ![
+          'cursor',
+          'pageSize',
+          'page_size',
+          'sort',
+          'from',
+          'to',
+          'dateField',
+          'date_field',
+          'fields',
+          'fields[]',
+          'searchId',
+          'search_id',
+          'view',
+        ].includes(key) &&
+        key.endsWith('[]')
+      ) {
+        this.addArrayParam(params, key, value);
+      }
+    }
+
+    return params;
+  }
+
+  private normalizeSearchPostBody(body: V2SearchPostBody): V2SearchPostBody {
+    const normalized: V2SearchPostBody = {};
+
+    for (const [key, value] of Object.entries(body)) {
+      if (value !== undefined && key !== 'filterId') {
+        normalized[key] = value;
+      }
+    }
+
+    if (body.filterId !== undefined && normalized.filter_id === undefined) {
+      normalized.filter_id = body.filterId;
+    }
+
+    return normalized;
+  }
+
   private buildInvestigationParams(
     options: V2InvestigationSearchOptions
   ): Record<string, any> {
@@ -405,6 +559,40 @@ export class StealerV2Service {
     if (value !== undefined) {
       params[key] = value;
     }
+  }
+
+  private addArrayParam(
+    params: Record<string, any>,
+    key: string,
+    value: unknown
+  ): void {
+    if (value === undefined) {
+      return;
+    }
+
+    const values = Array.isArray(value) ? value : [value];
+    if (!params[key]) {
+      params[key] = [];
+    }
+    params[key].push(...values);
+  }
+
+  private buildPathWithQuery(path: string, params: Record<string, any>): string {
+    const searchParams = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined) {
+        continue;
+      }
+      if (Array.isArray(value)) {
+        value.forEach((item) => searchParams.append(key, String(item)));
+      } else {
+        searchParams.set(key, String(value));
+      }
+    }
+
+    const query = searchParams.toString();
+    return query ? `${path}?${query}` : path;
   }
 
   private assignAlias(

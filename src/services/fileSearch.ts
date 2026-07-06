@@ -3,7 +3,14 @@
  */
 
 import { OathNetClient } from '../client';
-import { ApiResponse, FileSearchJobData } from '../types';
+import {
+  ApiResponse,
+  FileSearchJobData,
+  V2FileMetadataSearchRequest,
+  V2FileMetadataSearchResponse,
+} from '../types';
+
+const FILE_METADATA_SEARCH_PATH = '/service/v2/files/search';
 
 export interface FileSearchCreateOptions {
   searchMode?: 'literal' | 'regex' | 'wildcard';
@@ -17,6 +24,50 @@ export interface FileSearchCreateOptions {
 
 export class FileSearchService {
   constructor(private client: OathNetClient) {}
+
+  /**
+   * Search sanitized victim file metadata.
+   */
+  async searchMetadata(
+    request: V2FileMetadataSearchRequest = {}
+  ): Promise<V2FileMetadataSearchResponse> {
+    const params = this.normalizeMetadataRequest(request);
+    return this.client.get<V2FileMetadataSearchResponse>(
+      FILE_METADATA_SEARCH_PATH,
+      params
+    );
+  }
+
+  /**
+   * OperationId-compatible alias for GET /service/v2/files/search.
+   */
+  async searchFilesMetadataV2(
+    request: V2FileMetadataSearchRequest = {}
+  ): Promise<V2FileMetadataSearchResponse> {
+    return this.searchMetadata(request);
+  }
+
+  /**
+   * Search sanitized victim file metadata with a JSON body.
+   */
+  async searchMetadataPost(
+    request: V2FileMetadataSearchRequest = {}
+  ): Promise<V2FileMetadataSearchResponse> {
+    const data = this.normalizeMetadataRequest(request);
+    return this.client.post<V2FileMetadataSearchResponse>(
+      FILE_METADATA_SEARCH_PATH,
+      data
+    );
+  }
+
+  /**
+   * OperationId-compatible alias for POST /service/v2/files/search.
+   */
+  async searchFilesMetadataV2Post(
+    request: V2FileMetadataSearchRequest = {}
+  ): Promise<V2FileMetadataSearchResponse> {
+    return this.searchMetadataPost(request);
+  }
 
   /**
    * Create a file search job
@@ -104,5 +155,44 @@ export class FileSearchService {
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private normalizeMetadataRequest(
+    request: V2FileMetadataSearchRequest
+  ): Record<string, any> {
+    const params: Record<string, any> = {};
+    this.assign(params, 'q', request.q);
+    this.assign(params, 'log_id', request.logId ?? request.log_id);
+    this.assign(params, 'name', request.name);
+    this.assign(params, 'folder', request.folder);
+    this.assign(params, 'kind', request.kind);
+    this.assign(params, 'ext', request.ext);
+    this.assign(params, 'size_min', request.sizeMin ?? request.size_min);
+    this.assign(params, 'size_max', request.sizeMax ?? request.size_max);
+    this.assign(params, 'page_size', request.pageSize ?? request.page_size);
+    this.assign(params, 'cursor', request.cursor);
+    this.assign(params, 'search_id', request.searchId ?? request.search_id);
+
+    for (const [key, value] of Object.entries(request)) {
+      if (
+        value !== undefined &&
+        !(key in params) &&
+        !['logId', 'sizeMin', 'sizeMax', 'pageSize', 'searchId'].includes(key)
+      ) {
+        params[key] = value;
+      }
+    }
+
+    return params;
+  }
+
+  private assign(
+    params: Record<string, any>,
+    key: string,
+    value: unknown
+  ): void {
+    if (value !== undefined) {
+      params[key] = value;
+    }
   }
 }

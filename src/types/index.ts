@@ -374,12 +374,91 @@ export interface V2SearchMeta {
   has_more?: boolean;
   total_pages?: number;
   max_score?: number;
+  filter_id?: FilterContextId;
 }
+
+export interface V2SearchPostBody {
+  [key: string]: unknown;
+  filter?: StructuredFilterNode;
+  filter_id?: FilterContextId;
+  filterId?: FilterContextId;
+}
+
+export interface V2SearchPostOptions {
+  [key: string]: unknown;
+  cursor?: string;
+  pageSize?: number;
+  page_size?: number;
+  sort?: string;
+  from?: string;
+  to?: string;
+  dateField?: 'indexed_at' | 'pwned_at';
+  date_field?: 'indexed_at' | 'pwned_at';
+  fields?: string[];
+  'fields[]'?: string[];
+  searchId?: string;
+  search_id?: string;
+  view?: 'enriched';
+}
+
+export interface V2StealerSearchOptions extends V2SearchPostOptions {
+  q?: string;
+  logId?: string;
+  log_id?: string;
+  hasLogId?: boolean;
+  has_log_id?: boolean;
+  wildcard?: boolean;
+  logic?: 'and' | 'or';
+  filter?: StructuredFilterNode | string;
+  filterId?: FilterContextId;
+  filter_id?: FilterContextId;
+  domains?: string[];
+  'domain[]'?: string[];
+  subdomains?: string[];
+  'subdomain[]'?: string[];
+  usernames?: string[];
+  'username[]'?: string[];
+  passwords?: string[];
+  'password[]'?: string[];
+  passwordHashes?: string[];
+  'password_hash[]'?: string[];
+  paths?: string[];
+  'path[]'?: string[];
+  emails?: string[];
+  'email[]'?: string[];
+  emailDomains?: string[];
+  'email_domain[]'?: string[];
+  ips?: string[];
+  'ip[]'?: string[];
+  hwids?: string[];
+  'hwid[]'?: string[];
+  discordIds?: string[];
+  'discord_id[]'?: string[];
+  sourceTypes?: string[];
+  'source_type[]'?: string[];
+  archiveHashes?: string[];
+  'archive_hash[]'?: string[];
+  canonicalCredentialIds?: string[];
+  'canonical_credential_id[]'?: string[];
+}
+
+export type V2StealerSearchPostOptions = V2SearchPostOptions;
 
 export interface V2StealerData {
   items: V2StealerResult[];
   meta?: V2SearchMeta;
   next_cursor?: string;
+  victims?: V2VictimResult[];
+  victims_meta?: V2SearchMeta;
+  victims_next_cursor?: string;
+  credential_stats?: {
+    direct_total?: number;
+    direct_loaded?: number;
+    linked_total?: number;
+    linked_loaded?: number;
+    total?: number;
+    loaded?: number;
+  };
   _meta?: ResponseMeta;
 }
 
@@ -935,6 +1014,65 @@ export interface V2VictimsData {
   _meta?: ResponseMeta;
 }
 
+export interface V2VictimsSearchOptions extends V2SearchPostOptions {
+  q?: string;
+  wildcard?: boolean;
+  logId?: string;
+  log_id?: string;
+  filter?: StructuredFilterNode | string;
+  filterId?: FilterContextId;
+  filter_id?: FilterContextId;
+  totalDocsMin?: number;
+  total_docs_min?: number;
+  totalDocsMax?: number;
+  total_docs_max?: number;
+  serviceCountMin?: number;
+  service_count_min?: number;
+  serviceCountMax?: number;
+  service_count_max?: number;
+  emails?: string[];
+  'email[]'?: string[];
+  emailDomains?: string[];
+  'email_domain[]'?: string[];
+  ips?: string[];
+  'ip[]'?: string[];
+  hwids?: string[];
+  'hwid[]'?: string[];
+  discordIds?: string[];
+  'discord_id[]'?: string[];
+  usernames?: string[];
+  'username[]'?: string[];
+  countries?: string[];
+  'country[]'?: string[];
+  cities?: string[];
+  'city[]'?: string[];
+  operatingSystems?: string[];
+  oses?: string[];
+  'os[]'?: string[];
+  services?: string[];
+  'service[]'?: string[];
+  steamIds?: string[];
+  'steam_id[]'?: string[];
+  steamNames?: string[];
+  'steam_name[]'?: string[];
+  phones?: string[];
+  'phone[]'?: string[];
+  domains?: string[];
+  'domain[]'?: string[];
+  subdomains?: string[];
+  'subdomain[]'?: string[];
+  identityStates?: string[];
+  'identity_state[]'?: string[];
+  victimIps?: string[];
+  'victim_ip[]'?: string[];
+  antivirus?: string[];
+  'antivirus[]'?: string[];
+  infectionPaths?: string[];
+  'infection_path[]'?: string[];
+}
+
+export type V2VictimsSearchPostOptions = V2SearchPostOptions;
+
 export interface VictimManifestNode {
   id: string;
   name: string;
@@ -948,6 +1086,167 @@ export interface VictimManifestData {
   log_name?: string;
   victim_tree: VictimManifestNode;
   _meta?: ResponseMeta;
+}
+
+export interface V2FileMetadataSearchRequest {
+  [key: string]: unknown;
+  q?: string;
+  log_id?: string;
+  logId?: string;
+  name?: string;
+  folder?: string;
+  kind?: string;
+  ext?: string;
+  size_min?: number;
+  sizeMin?: number;
+  size_max?: number;
+  sizeMax?: number;
+  page_size?: number;
+  pageSize?: number;
+  cursor?: string;
+  search_id?: string;
+  searchId?: string;
+}
+
+export interface V2VictimPropertiesSearchRequest {
+  [key: string]: unknown;
+  q?: string;
+  log_id?: string;
+  logId?: string;
+  property_type?: string | string[];
+  propertyType?: string | string[];
+  service?: string;
+  identity_kind?: string;
+  identityKind?: string;
+  account_id?: string;
+  accountId?: string;
+  username?: string;
+  display_name?: string;
+  displayName?: string;
+  value?: string;
+  domain?: string;
+  active?: boolean;
+  source_type?: string;
+  sourceType?: string;
+  source_path?: string;
+  sourcePath?: string;
+  source_file_id?: string;
+  sourceFileId?: string;
+  confidence?: string | string[];
+  confidence_min?: number;
+  confidenceMin?: number;
+  include_cookie_evidence?: boolean;
+  includeCookieEvidence?: boolean;
+  exclude_cookie_evidence?: boolean;
+  excludeCookieEvidence?: boolean;
+  page_size?: number;
+  pageSize?: number;
+  cursor?: string;
+  sort?: string;
+  search_id?: string;
+  searchId?: string;
+}
+
+export type V2VictimPropertiesOptions = Omit<
+  V2VictimPropertiesSearchRequest,
+  'log_id' | 'logId'
+>;
+
+export interface V2VictimSummaryResponse {
+  log_id?: string;
+  generated_at?: string;
+  stale?: boolean;
+  victim?: Record<string, unknown>;
+  assessment?: Record<string, unknown>;
+  access?: Record<string, unknown>;
+  targets?: Record<string, unknown>;
+  files?: Record<string, unknown>;
+  cookies?: Record<string, unknown>;
+  cookie_investigation?: Record<string, unknown>;
+  history?: Record<string, unknown>;
+  cards?: Record<string, unknown>;
+  domains?: Record<string, unknown>;
+  artifacts?: Record<string, unknown>;
+  warnings?: string[];
+  policy_redacted?: boolean;
+  upgrade_required?: boolean;
+  redaction_marker?: string;
+  [key: string]: unknown;
+}
+
+export interface V2VictimCookiesOptions {
+  [key: string]: unknown;
+  domain?: string;
+  status?: 'all' | 'active' | 'expired' | 'session';
+  q?: string;
+  include_items?: boolean;
+  includeItems?: boolean;
+  page_size?: number;
+  pageSize?: number;
+  cursor?: string;
+  search_id?: string;
+  searchId?: string;
+}
+
+export interface V2VictimCookieInventoryItem {
+  domain?: string;
+  cookie_domain?: string;
+  name?: string;
+  path?: string;
+  expires_at?: string;
+  expires_unix?: number;
+  status?: 'active' | 'expired' | 'session';
+  session?: boolean;
+  secure?: boolean;
+  http_only?: boolean;
+  source_file_id?: string;
+  source_path?: string;
+  line_number?: number;
+  [key: string]: unknown;
+}
+
+export interface V2VictimCookieInventoryDomainStat {
+  domain?: string;
+  count?: number;
+  active?: number;
+  expired?: number;
+  session?: number;
+  secure?: number;
+  http_only?: number;
+  source_files?: number;
+  [key: string]: unknown;
+}
+
+export interface V2VictimCookieInventoryResponse {
+  log_id?: string;
+  items?: V2VictimCookieInventoryItem[];
+  domains?: V2VictimCookieInventoryDomainStat[];
+  meta?: V2SearchMeta;
+  next_cursor?: string;
+  files_scanned?: number;
+  files_matched?: number;
+  truncated?: boolean;
+  values_redacted?: boolean;
+  warnings?: string[];
+  policy_redacted?: boolean;
+  upgrade_required?: boolean;
+  redaction_marker?: string;
+  [key: string]: unknown;
+}
+
+export interface V2VictimCookieDomainOptions {
+  file_id?: string;
+  fileId?: string;
+  search_id?: string;
+  searchId?: string;
+}
+
+export interface V2VictimCookieDomainInspectResponse {
+  log_id?: string;
+  domain?: string;
+  items?: Record<string, unknown>[];
+  copy_text?: string;
+  [key: string]: unknown;
 }
 
 // ============================================
@@ -1069,6 +1368,19 @@ export interface ExportJobData {
   next_poll_after_ms?: number;
   metadata?: Record<string, unknown>;
   _meta?: ResponseMeta;
+}
+
+export interface V2ExportJobListOptions {
+  page?: number;
+  pageSize?: number;
+  page_size?: number;
+}
+
+export interface V2ExportJobListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: ExportJobData[];
 }
 
 // ============================================

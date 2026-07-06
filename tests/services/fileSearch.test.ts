@@ -4,6 +4,7 @@
  */
 
 import { OathNetClient } from '../../src';
+import { FileSearchService } from '../../src/services/fileSearch';
 import { getApiKey } from '../helpers';
 
 /**
@@ -28,6 +29,17 @@ async function getLogIds(client: OathNetClient, count: number = 3): Promise<stri
 }
 
 describe('FileSearchService', () => {
+  const createService = () => {
+    const get = jest.fn();
+    const post = jest.fn();
+    const service = new FileSearchService({
+      get,
+      post,
+    } as unknown as OathNetClient);
+
+    return { get, post, service };
+  };
+
   let client: OathNetClient | null = null;
 
   beforeAll(() => {
@@ -35,6 +47,82 @@ describe('FileSearchService', () => {
     if (apiKey) {
       client = new OathNetClient(apiKey);
     }
+  });
+
+  describe('request construction', () => {
+    it('is exposed from the main client', () => {
+      const localClient = new OathNetClient('test-api-key');
+
+      expect(localClient.fileSearch).toBeDefined();
+      expect(localClient.fileSearch).toBe(localClient.fileSearch);
+    });
+
+    it('searches file metadata with documented GET params', async () => {
+      const { get, service } = createService();
+      get.mockResolvedValue({
+        items: [
+          {
+            log_id: 'log-123',
+            file_id: 'file-1',
+            name: 'Cookies.txt',
+            kind: 'cookies',
+          },
+        ],
+        meta: { count: 1, took_ms: 3 },
+      });
+
+      const result = await service.searchFilesMetadataV2({
+        q: 'example.com',
+        logId: 'log-123',
+        name: 'Cookies.txt',
+        folder: 'Browser',
+        kind: 'cookies',
+        ext: 'txt',
+        sizeMin: 10,
+        sizeMax: 2048,
+        pageSize: 25,
+        cursor: 'cursor-1',
+        searchId: 'session-123',
+      });
+
+      expect(result.items?.[0].file_id).toBe('file-1');
+      expect(get).toHaveBeenCalledWith('/service/v2/files/search', {
+        q: 'example.com',
+        log_id: 'log-123',
+        name: 'Cookies.txt',
+        folder: 'Browser',
+        kind: 'cookies',
+        ext: 'txt',
+        size_min: 10,
+        size_max: 2048,
+        page_size: 25,
+        cursor: 'cursor-1',
+        search_id: 'session-123',
+      });
+    });
+
+    it('posts file metadata searches with a normalized JSON body', async () => {
+      const { post, service } = createService();
+      post.mockResolvedValue({
+        items: [{ log_id: 'log-123', file_id: 'file-2', kind: 'passwords' }],
+        meta: { count: 1, took_ms: 4 },
+      });
+
+      const result = await service.searchFilesMetadataV2Post({
+        q: 'password',
+        kind: 'passwords',
+        pageSize: 50,
+        searchId: 'session-post',
+      });
+
+      expect(result.items?.[0].kind).toBe('passwords');
+      expect(post).toHaveBeenCalledWith('/service/v2/files/search', {
+        q: 'password',
+        kind: 'passwords',
+        page_size: 50,
+        search_id: 'session-post',
+      });
+    });
   });
 
   describe('create', () => {

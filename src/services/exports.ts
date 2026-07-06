@@ -3,7 +3,12 @@
  */
 
 import { OathNetClient } from '../client';
-import { ApiResponse, ExportJobData } from '../types';
+import {
+  ApiResponse,
+  ExportJobData,
+  V2ExportJobListOptions,
+  V2ExportJobListResponse,
+} from '../types';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -50,6 +55,48 @@ export class ExportsService {
       return data as ApiResponse<ExportJobData>;
     }
     return { success: true, data: data as ExportJobData };
+  }
+
+  /**
+   * List export jobs.
+   */
+  async list(
+    options?: V2ExportJobListOptions
+  ): Promise<V2ExportJobListResponse>;
+  async list(
+    page?: number,
+    pageSize?: number
+  ): Promise<V2ExportJobListResponse>;
+  async list(
+    optionsOrPage?: V2ExportJobListOptions | number,
+    pageSize?: number
+  ): Promise<V2ExportJobListResponse> {
+    const params = this.buildListParams(optionsOrPage, pageSize);
+    return this.client.get<V2ExportJobListResponse>(
+      '/service/v2/exports/list',
+      params
+    );
+  }
+
+  /**
+   * OperationId-compatible alias for GET /service/v2/exports/list.
+   */
+  async listExportsV2(
+    options?: V2ExportJobListOptions
+  ): Promise<V2ExportJobListResponse>;
+  async listExportsV2(
+    page?: number,
+    pageSize?: number
+  ): Promise<V2ExportJobListResponse>;
+  async listExportsV2(
+    optionsOrPage?: V2ExportJobListOptions | number,
+    pageSize?: number
+  ): Promise<V2ExportJobListResponse> {
+    const params = this.buildListParams(optionsOrPage, pageSize);
+    return this.client.get<V2ExportJobListResponse>(
+      '/service/v2/exports/list',
+      params
+    );
   }
 
   /**
@@ -117,5 +164,25 @@ export class ExportsService {
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private buildListParams(
+    optionsOrPage?: V2ExportJobListOptions | number,
+    pageSize?: number
+  ): Record<string, any> {
+    if (typeof optionsOrPage === 'number') {
+      return {
+        page: optionsOrPage,
+        ...(pageSize !== undefined ? { page_size: pageSize } : {}),
+      };
+    }
+
+    const options = optionsOrPage ?? {};
+    const params: Record<string, any> = {};
+    if (options.page !== undefined) params.page = options.page;
+    if (options.pageSize !== undefined || options.page_size !== undefined) {
+      params.page_size = options.pageSize ?? options.page_size;
+    }
+    return params;
   }
 }
