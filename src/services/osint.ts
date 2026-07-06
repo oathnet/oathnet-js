@@ -18,45 +18,75 @@ import {
   MinecraftHistoryData,
 } from '../types';
 
+export interface OSINTRequestOptions {
+  searchId?: string;
+}
+
+export interface RobloxUserinfoOptions extends OSINTRequestOptions {
+  userId?: string;
+  username?: string;
+}
+
 export class OSINTService {
   constructor(private client: OathNetClient) {}
+
+  private addSearchId(
+    params: Record<string, any>,
+    options: OSINTRequestOptions = {}
+  ): Record<string, any> {
+    if (options.searchId !== undefined) params.search_id = options.searchId;
+    return params;
+  }
 
   /**
    * Get IP address information
    */
-  async ipInfo(ip: string): Promise<ApiResponse<IPInfoData>> {
-    return this.client.get<ApiResponse<IPInfoData>>('/service/ip-info', {
-      ip,
-    });
+  async ipInfo(
+    ip: string,
+    options: OSINTRequestOptions = {}
+  ): Promise<ApiResponse<IPInfoData>> {
+    return this.client.get<ApiResponse<IPInfoData>>(
+      '/service/ip-info',
+      this.addSearchId({ ip }, options)
+    );
   }
 
   /**
    * Get Steam profile
    */
-  async steam(steamId: string): Promise<ApiResponse<SteamProfileData>> {
-    return this.client.get<ApiResponse<SteamProfileData>>('/service/steam', {
-      steam_id: steamId,
-    });
+  async steam(
+    steamId: string,
+    options: OSINTRequestOptions = {}
+  ): Promise<ApiResponse<SteamProfileData>> {
+    return this.client.get<ApiResponse<SteamProfileData>>(
+      '/service/steam',
+      this.addSearchId({ steam_id: steamId }, options)
+    );
   }
 
   /**
    * Get Xbox Live profile
    */
-  async xbox(xblId: string): Promise<ApiResponse<XboxProfileData>> {
-    return this.client.get<ApiResponse<XboxProfileData>>('/service/xbox', {
-      xbl_id: xblId,
-    });
+  async xbox(
+    xblId: string,
+    options: OSINTRequestOptions = {}
+  ): Promise<ApiResponse<XboxProfileData>> {
+    return this.client.get<ApiResponse<XboxProfileData>>(
+      '/service/xbox',
+      this.addSearchId({ xbl_id: xblId }, options)
+    );
   }
 
   /**
    * Get Discord user information
    */
   async discordUserinfo(
-    discordId: string
+    discordId: string,
+    options: OSINTRequestOptions = {}
   ): Promise<ApiResponse<DiscordUserData>> {
     return this.client.get<ApiResponse<DiscordUserData>>(
       '/service/discord-userinfo',
-      { discord_id: discordId }
+      this.addSearchId({ discord_id: discordId }, options)
     );
   }
 
@@ -64,11 +94,12 @@ export class OSINTService {
    * Get Discord username history
    */
   async discordUsernameHistory(
-    discordId: string
+    discordId: string,
+    options: OSINTRequestOptions = {}
   ): Promise<ApiResponse<DiscordUsernameHistoryData>> {
     return this.client.get<ApiResponse<DiscordUsernameHistoryData>>(
       '/service/discord-username-history',
-      { discord_id: discordId }
+      this.addSearchId({ discord_id: discordId }, options)
     );
   }
 
@@ -76,45 +107,55 @@ export class OSINTService {
    * Get Roblox account linked to Discord
    */
   async discordToRoblox(
-    discordId: string
+    discordId: string,
+    options: OSINTRequestOptions = {}
   ): Promise<ApiResponse<DiscordToRobloxData>> {
     return this.client.get<ApiResponse<DiscordToRobloxData>>(
       '/service/discord-to-roblox',
-      { discord_id: discordId }
+      this.addSearchId({ discord_id: discordId }, options)
     );
   }
 
   /**
    * Get Roblox user information
    */
-  async robloxUserinfo(options: {
-    userId?: string;
-    username?: string;
-  }): Promise<ApiResponse<RobloxUserData>> {
-    const params: Record<string, string> = {};
+  async robloxUserinfo(
+    options: RobloxUserinfoOptions
+  ): Promise<ApiResponse<RobloxUserData>> {
+    const params: Record<string, any> = {};
     if (options.userId) params.user_id = options.userId;
     if (options.username) params.username = options.username;
 
     return this.client.get<ApiResponse<RobloxUserData>>(
       '/service/roblox-userinfo',
-      params
+      this.addSearchId(params, options)
     );
   }
 
   /**
    * Check email account existence across services
    */
-  async holehe(email: string): Promise<ApiResponse<HoleheData>> {
-    return this.client.get<ApiResponse<HoleheData>>('/service/holehe', {
-      email,
-    });
+  async holehe(
+    email: string,
+    options: OSINTRequestOptions = {}
+  ): Promise<ApiResponse<HoleheData>> {
+    return this.client.get<ApiResponse<HoleheData>>(
+      '/service/holehe',
+      this.addSearchId({ email }, options)
+    );
   }
 
   /**
    * Get Google account information
    */
-  async ghunt(email: string): Promise<ApiResponse<GHuntData>> {
-    return this.client.get<ApiResponse<GHuntData>>('/service/ghunt', { email });
+  async ghunt(
+    email: string,
+    options: OSINTRequestOptions = {}
+  ): Promise<ApiResponse<GHuntData>> {
+    return this.client.get<ApiResponse<GHuntData>>(
+      '/service/ghunt',
+      this.addSearchId({ email }, options)
+    );
   }
 
   /**
@@ -122,14 +163,28 @@ export class OSINTService {
    */
   async extractSubdomain(
     domain: string,
-    isAlive?: boolean
+    options?: OSINTRequestOptions
+  ): Promise<ApiResponse<ExtractSubdomainData>>;
+  async extractSubdomain(
+    domain: string,
+    isAlive?: boolean,
+    options?: OSINTRequestOptions
+  ): Promise<ApiResponse<ExtractSubdomainData>>;
+  async extractSubdomain(
+    domain: string,
+    isAliveOrOptions?: boolean | OSINTRequestOptions,
+    options: OSINTRequestOptions = {}
   ): Promise<ApiResponse<ExtractSubdomainData>> {
     const params: Record<string, any> = { domain };
-    if (isAlive !== undefined) params.is_alive = isAlive;
+    const requestOptions =
+      typeof isAliveOrOptions === 'object' ? isAliveOrOptions : options;
+    if (typeof isAliveOrOptions === 'boolean') {
+      params.is_alive = isAliveOrOptions;
+    }
 
     return this.client.get<ApiResponse<ExtractSubdomainData>>(
       '/service/extract-subdomain',
-      params
+      this.addSearchId(params, requestOptions)
     );
   }
 
@@ -137,11 +192,12 @@ export class OSINTService {
    * Get Minecraft username history
    */
   async minecraftHistory(
-    username: string
+    username: string,
+    options: OSINTRequestOptions = {}
   ): Promise<ApiResponse<MinecraftHistoryData>> {
     return this.client.get<ApiResponse<MinecraftHistoryData>>(
-      '/service/minecraft-history',
-      { username }
+      '/service/mc-history',
+      this.addSearchId({ username }, options)
     );
   }
 }
