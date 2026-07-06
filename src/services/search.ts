@@ -6,9 +6,15 @@ import { OathNetClient } from '../client';
 import {
   ApiResponse,
   SearchSessionData,
+  SearchSessionType,
   BreachSearchData,
   StealerSearchData,
 } from '../types';
+
+export interface SearchSessionInitOptions {
+  searchType?: SearchSessionType | string;
+  search_type?: SearchSessionType | string;
+}
 
 export interface BreachSearchOptions {
   cursor?: string;
@@ -28,10 +34,23 @@ export class SearchService {
   /**
    * Initialize a search session
    */
-  async initSession(query: string): Promise<ApiResponse<SearchSessionData>> {
+  async initSession(
+    query: string,
+    options: SearchSessionInitOptions | SearchSessionType | string = {}
+  ): Promise<ApiResponse<SearchSessionData>> {
+    const body: Record<string, any> = { query };
+    const searchType =
+      typeof options === 'string'
+        ? options
+        : options.searchType ?? options.search_type;
+
+    if (searchType !== undefined) {
+      body.search_type = searchType;
+    }
+
     return this.client.post<ApiResponse<SearchSessionData>>(
       '/service/search/init',
-      { query }
+      body
     );
   }
 

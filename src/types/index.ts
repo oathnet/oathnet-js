@@ -273,17 +273,31 @@ export type ScannerWebhookRotateResponse =
 // SEARCH RESPONSES
 // ============================================
 
+export type SearchSessionType =
+  | 'email'
+  | 'username'
+  | 'ip'
+  | 'domain'
+  | 'discord_id'
+  | 'steam_id'
+  | 'xbox_id'
+  | 'roblox_id'
+  | 'stealer';
+
 export interface SearchSession {
   id: string;
   query: string;
-  search_type: string;
-  expires_at: string;
+  search_type?: SearchSessionType | string;
+  status?: 'active' | 'expired' | string;
+  created_at?: string;
+  expires_at?: string;
+  duration_minutes?: number;
 }
 
 export interface SearchSessionUser {
-  plan: string;
-  plan_type: string;
-  is_plan_active: boolean;
+  plan?: string;
+  plan_type?: string;
+  is_plan_active?: boolean;
   daily_lookups?: {
     used: number;
     remaining: number;
@@ -292,9 +306,28 @@ export interface SearchSessionUser {
   };
 }
 
+export interface SearchSessionService {
+  name?: string;
+  service_id?: string;
+  category?: string;
+  is_available?: boolean;
+  is_premium?: boolean;
+  session_quota?: number;
+  today_usage?: number;
+  recommended_quota?: number;
+}
+
+export interface SearchSessionSummary {
+  total_services?: number;
+  available_services?: number;
+  session_expires_in_minutes?: number;
+}
+
 export interface SearchSessionData {
   session: SearchSession;
   user?: SearchSessionUser;
+  services?: Record<string, SearchSessionService>;
+  summary?: SearchSessionSummary;
 }
 
 export interface BreachResult {
