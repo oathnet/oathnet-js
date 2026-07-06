@@ -13,10 +13,13 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export interface ExportCreateOptions {
-  format?: 'jsonl' | 'csv';
+  format?: 'json' | 'jsonl' | 'csv' | 'txt' | 'html';
   limit?: number;
   fields?: string[];
   search?: Record<string, any>;
+  service?: 'stealer' | 'victims' | 'breach';
+  queryConfig?: Record<string, any>;
+  query_config?: Record<string, any>;
 }
 
 export class ExportsService {
@@ -26,7 +29,7 @@ export class ExportsService {
    * Create an export job
    */
   async create(
-    exportType: 'docs' | 'victims',
+    exportType: 'docs' | 'victims' | 'breach',
     options: ExportCreateOptions = {}
   ): Promise<ApiResponse<ExportJobData>> {
     const body: Record<string, any> = {
@@ -37,6 +40,10 @@ export class ExportsService {
     if (options.limit) body.limit = options.limit;
     if (options.fields) body.fields = options.fields;
     if (options.search) body.search = options.search;
+    if (options.service) body.service = options.service;
+    if (options.queryConfig || options.query_config) {
+      body.query_config = options.queryConfig ?? options.query_config;
+    }
 
     const data = await this.client.post<any>('/service/v2/exports', body);
     // Handle wrapped or unwrapped response
@@ -47,14 +54,33 @@ export class ExportsService {
   }
 
   /**
+   * OperationId-compatible alias for POST /service/v2/exports.
+   */
+  async createExportV2(
+    exportType: 'docs' | 'victims' | 'breach',
+    options: ExportCreateOptions = {}
+  ): Promise<ApiResponse<ExportJobData>> {
+    return this.create(exportType, options);
+  }
+
+  /**
    * Get export job status
    */
   async getStatus(jobId: string): Promise<ApiResponse<ExportJobData>> {
-    const data = await this.client.get<any>(`/service/v2/exports/${jobId}`);
+    const data = await this.client.get<any>(
+      `/service/v2/exports/${this.encode(jobId)}`
+    );
     if ('success' in data) {
       return data as ApiResponse<ExportJobData>;
     }
     return { success: true, data: data as ExportJobData };
+  }
+
+  /**
+   * OperationId-compatible alias for GET /service/v2/exports/{job_id}.
+   */
+  async getExportV2(jobId: string): Promise<ApiResponse<ExportJobData>> {
+    return this.getStatus(jobId);
   }
 
   /**
@@ -104,7 +130,7 @@ export class ExportsService {
    */
   async download(jobId: string, outputPath?: string): Promise<Buffer | string> {
     const data = await this.client.getRaw(
-      `/service/v2/exports/${jobId}/download`
+      `/service/v2/exports/${this.encode(jobId)}/download`
     );
 
     if (outputPath) {
@@ -113,6 +139,16 @@ export class ExportsService {
     }
 
     return data;
+  }
+
+  /**
+   * OperationId-compatible alias for GET /service/v2/exports/{job_id}/download.
+   */
+  async downloadExportV2(
+    jobId: string,
+    outputPath?: string
+  ): Promise<Buffer | string> {
+    return this.download(jobId, outputPath);
   }
 
   /**
@@ -149,7 +185,7 @@ export class ExportsService {
    * Create export, wait for completion, and download
    */
   async export(
-    exportType: 'docs' | 'victims',
+    exportType: 'docs' | 'victims' | 'breach',
     outputPath: string,
     options: ExportCreateOptions = {},
     timeout: number = 600000
@@ -164,6 +200,10 @@ export class ExportsService {
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private encode(value: string): string {
+    return encodeURIComponent(value);
   }
 
   private buildListParams(

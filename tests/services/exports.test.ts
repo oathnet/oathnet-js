@@ -76,6 +76,58 @@ describe('ExportsService', () => {
         page_size: 10,
       });
     });
+
+    it('creates breach exports with current format and query_config fields', async () => {
+      const { post, service } = createService();
+      post.mockResolvedValue({
+        job_id: 'export-1',
+        status: 'queued',
+        request: {
+          type: 'breach',
+          service: 'breach',
+          format: 'html',
+        },
+      });
+
+      const result = await service.createExportV2('breach', {
+        format: 'html',
+        service: 'breach',
+        limit: 10,
+        fields: ['email'],
+        search: { query: 'user@example.com' },
+        queryConfig: { filter_id: 'flt-123' },
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.data?.request?.service).toBe('breach');
+      expect(post).toHaveBeenCalledWith('/service/v2/exports', {
+        type: 'breach',
+        format: 'html',
+        limit: 10,
+        fields: ['email'],
+        search: { query: 'user@example.com' },
+        service: 'breach',
+        query_config: { filter_id: 'flt-123' },
+      });
+    });
+
+    it('gets status and downloads with encoded job_id path segments', async () => {
+      const { get, getRaw, service } = createService();
+      get.mockResolvedValue({ job_id: 'job/with space', status: 'completed' });
+      getRaw.mockResolvedValue(Buffer.from('email,source\n'));
+
+      const status = await service.getExportV2('job/with space');
+      const download = await service.downloadExportV2('job/with space');
+
+      expect(status.data?.status).toBe('completed');
+      expect(Buffer.isBuffer(download)).toBe(true);
+      expect(get).toHaveBeenCalledWith(
+        '/service/v2/exports/job%2Fwith%20space'
+      );
+      expect(getRaw).toHaveBeenCalledWith(
+        '/service/v2/exports/job%2Fwith%20space/download'
+      );
+    });
   });
 
   describe('create', () => {

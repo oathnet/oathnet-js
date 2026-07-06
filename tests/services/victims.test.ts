@@ -11,14 +11,16 @@ describe('VictimsService', () => {
   const createService = () => {
     const get = jest.fn();
     const post = jest.fn();
+    const getRaw = jest.fn();
     const getText = jest.fn();
     const service = new VictimsService({
       get,
       post,
+      getRaw,
       getText,
     } as unknown as OathNetClient);
 
-    return { get, post, getText, service };
+    return { get, post, getRaw, getText, service };
   };
 
   let client: OathNetClient | null = null;
@@ -373,6 +375,43 @@ describe('VictimsService', () => {
           file_id: 'file-1',
           search_id: 'session-123',
         }
+      );
+    });
+
+    it('gets manifest, file bytes, and archive bytes with encoded paths and search_id', async () => {
+      const { get, getRaw, service } = createService();
+      get.mockResolvedValue({
+        log_id: 'log/with space',
+        victim_tree: { id: 'root', name: 'root', type: 'directory' },
+      });
+      getRaw.mockResolvedValue(Buffer.from('raw file'));
+
+      const manifest = await service.getVictimManifestV2('log/with space', {
+        searchId: 'session-123',
+      });
+      const file = await service.getVictimFileV2(
+        'log/with space',
+        'Browser Passwords/file 1.txt',
+        { search_id: 'session-123' }
+      );
+      const archive = await service.downloadVictimArchiveV2(
+        'log/with space',
+        undefined,
+        { searchId: 'session-123' }
+      );
+
+      expect(manifest.victim_tree.name).toBe('root');
+      expect(file.toString()).toBe('raw file');
+      expect(Buffer.isBuffer(archive)).toBe(true);
+      expect(get).toHaveBeenCalledWith(
+        '/service/v2/victims/log%2Fwith%20space',
+        { search_id: 'session-123' }
+      );
+      expect(getRaw).toHaveBeenCalledWith(
+        '/service/v2/victims/log%2Fwith%20space/files/Browser%20Passwords%2Ffile%201.txt?search_id=session-123'
+      );
+      expect(getRaw).toHaveBeenCalledWith(
+        '/service/v2/victims/log%2Fwith%20space/archive?search_id=session-123'
       );
     });
   });

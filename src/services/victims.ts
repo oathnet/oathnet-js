@@ -101,6 +101,11 @@ const KNOWN_VICTIMS_SEARCH_OPTION_KEYS = new Set<string>([
 
 export interface VictimsSearchOptions extends V2VictimsSearchOptions {}
 
+export interface VictimSearchIdOptions {
+  search_id?: string;
+  searchId?: string;
+}
+
 export class VictimsService {
   constructor(private client: OathNetClient) {}
 
@@ -314,26 +319,68 @@ export class VictimsService {
    * Get victim file manifest (file tree)
    * Note: Returns unwrapped response
    */
-  async getManifest(logId: string): Promise<VictimManifestData> {
+  async getManifest(
+    logId: string,
+    options: VictimSearchIdOptions = {}
+  ): Promise<VictimManifestData> {
     // This endpoint returns unwrapped response
     return this.client.get<VictimManifestData>(
-      `/service/v2/victims/${logId}`
+      `/service/v2/victims/${this.encode(logId)}`,
+      this.buildSearchIdParams(options)
     );
   }
 
   /**
-   * Get victim file content
-   * Note: Requires session authentication, may not work with API key only
+   * OperationId-compatible alias for GET /service/v2/victims/{log_id}.
    */
-  async getFile(logId: string, fileId: string): Promise<Buffer> {
-    return this.client.getRaw(`/service/v2/victims/${logId}/files/${fileId}`);
+  async getVictimManifestV2(
+    logId: string,
+    options: VictimSearchIdOptions = {}
+  ): Promise<VictimManifestData> {
+    return this.getManifest(logId, options);
+  }
+
+  /**
+   * Get victim file content
+   */
+  async getFile(
+    logId: string,
+    fileId: string,
+    options: VictimSearchIdOptions = {}
+  ): Promise<Buffer> {
+    return this.client.getRaw(
+      this.buildPathWithQuery(
+        `/service/v2/victims/${this.encode(logId)}/files/${this.encode(fileId)}`,
+        this.buildSearchIdParams(options)
+      )
+    );
+  }
+
+  /**
+   * OperationId-compatible alias for GET /service/v2/victims/{log_id}/files/{file_id}.
+   */
+  async getVictimFileV2(
+    logId: string,
+    fileId: string,
+    options: VictimSearchIdOptions = {}
+  ): Promise<Buffer> {
+    return this.getFile(logId, fileId, options);
   }
 
   /**
    * Download victim archive as ZIP
    */
-  async downloadArchive(logId: string, outputPath?: string): Promise<Buffer | string> {
-    const data = await this.client.getRaw(`/service/v2/victims/${logId}/archive`);
+  async downloadArchive(
+    logId: string,
+    outputPath?: string,
+    options: VictimSearchIdOptions = {}
+  ): Promise<Buffer | string> {
+    const data = await this.client.getRaw(
+      this.buildPathWithQuery(
+        `/service/v2/victims/${this.encode(logId)}/archive`,
+        this.buildSearchIdParams(options)
+      )
+    );
 
     if (outputPath) {
       fs.writeFileSync(outputPath, data);
@@ -341,6 +388,17 @@ export class VictimsService {
     }
 
     return data;
+  }
+
+  /**
+   * OperationId-compatible alias for GET /service/v2/victims/{log_id}/archive.
+   */
+  async downloadVictimArchiveV2(
+    logId: string,
+    outputPath?: string,
+    options: VictimSearchIdOptions = {}
+  ): Promise<Buffer | string> {
+    return this.downloadArchive(logId, outputPath, options);
   }
 
   private async searchWithOptions(
@@ -578,6 +636,12 @@ export class VictimsService {
     );
     this.assign(params, 'page_size', options.pageSize ?? options.page_size);
     this.assign(params, 'cursor', options.cursor);
+    this.assign(params, 'search_id', options.searchId ?? options.search_id);
+    return params;
+  }
+
+  private buildSearchIdParams(options: VictimSearchIdOptions): Record<string, any> {
+    const params: Record<string, any> = {};
     this.assign(params, 'search_id', options.searchId ?? options.search_id);
     return params;
   }
