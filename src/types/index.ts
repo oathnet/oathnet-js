@@ -389,6 +389,207 @@ export interface SubdomainData {
 }
 
 // ============================================
+// V2 BREACH RESPONSES
+// ============================================
+
+export interface V2BreachResult {
+  id?: string;
+  email?: string;
+  email_domain?: string;
+  username?: string;
+  password?: string;
+  password_hash?: string;
+  salt?: string;
+  full_name?: string;
+  first_name?: string;
+  last_name?: string;
+  middle_name?: string;
+  display_name?: string;
+  phone_number?: string;
+  phone_national?: string;
+  address_street?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
+  date_birth?: string;
+  age?: number;
+  created_at?: string;
+  last_login?: string;
+  indexed_at?: string;
+  ip?: string;
+  discordid?: string;
+  discord_id?: string;
+  instagram?: string;
+  linkedin?: string;
+  iban?: string;
+  ssn?: string;
+  dbname?: string;
+  gender?: string;
+  language?: string;
+  bio?: string;
+  location?: string;
+  extra?: Record<string, unknown>;
+  [key: string]: any;
+}
+
+export interface V2LeakMetadata {
+  Title?: string;
+  Domain?: string;
+  BreachDate?: string;
+  PwnCount?: number;
+  Description?: string;
+}
+
+export interface V2BreachData {
+  items: V2BreachResult[];
+  meta?: V2SearchMeta;
+  dbname_info?: Record<string, V2LeakMetadata>;
+  next_cursor?: string;
+  _meta?: ResponseMeta | Record<string, unknown>;
+}
+
+export interface V2BreachSearchOptions {
+  [key: string]: unknown;
+  q?: string;
+  cursor?: string;
+  pageSize?: number;
+  page_size?: number;
+  sort?: string;
+  from?: string;
+  to?: string;
+  dateField?: 'indexed_at' | 'pwned_at';
+  date_field?: 'indexed_at' | 'pwned_at';
+  wildcard?: boolean;
+  logic?: 'and' | 'or';
+  filter?: StructuredFilterNode | string;
+  filterId?: string;
+  filter_id?: string;
+  searchId?: string;
+  search_id?: string;
+  fields?: string[];
+  'fields[]'?: string[];
+  emails?: string[];
+  'email[]'?: string[];
+  emailDomains?: string[];
+  'email_domain[]'?: string[];
+  domains?: string[];
+  'domain[]'?: string[];
+  usernames?: string[];
+  'username[]'?: string[];
+  passwords?: string[];
+  'password[]'?: string[];
+  passwordHashes?: string[];
+  'password_hash[]'?: string[];
+  ips?: string[];
+  'ip[]'?: string[];
+  phones?: string[];
+  'phone[]'?: string[];
+  firstNames?: string[];
+  'first_name[]'?: string[];
+  lastNames?: string[];
+  'last_name[]'?: string[];
+  fullNames?: string[];
+  'full_name[]'?: string[];
+  cities?: string[];
+  'city[]'?: string[];
+  countries?: string[];
+  'country[]'?: string[];
+  states?: string[];
+  'state[]'?: string[];
+  postalCodes?: string[];
+  'postal_code[]'?: string[];
+  dbnames?: string[];
+  'dbname[]'?: string[];
+  discordIds?: string[];
+  'discord_id[]'?: string[];
+  ibans?: string[];
+  'iban[]'?: string[];
+  ssns?: string[];
+  'ssn[]'?: string[];
+  date_birth_from?: string;
+  date_birth_to?: string;
+  names?: string[];
+  'name[]'?: string[];
+  genders?: string[];
+  'gender[]'?: string[];
+  addresses?: string[];
+  'address[]'?: string[];
+  discords?: string[];
+  'discord[]'?: string[];
+  socials?: string[];
+  'social[]'?: string[];
+  financials?: string[];
+  'financial[]'?: string[];
+  gamings?: string[];
+  'gaming[]'?: string[];
+}
+
+export type V2BreachSearchPostOptions = Omit<
+  V2BreachSearchOptions,
+  'filter' | 'filterId' | 'filter_id'
+>;
+
+export interface V2BreachSearchPostBody {
+  [key: string]: unknown;
+  filter?: StructuredFilterNode;
+  filterId?: string;
+  filter_id?: string;
+}
+
+export interface V2AutocompleteValueItem {
+  field?: string;
+  value?: string;
+  count?: number;
+}
+
+export interface V2AutocompleteValueResponse {
+  items: V2AutocompleteValueItem[];
+  took_ms?: number;
+}
+
+export interface V2AutocompleteDBNameItem {
+  name?: string;
+  count?: number;
+  fields?: string[];
+  info?: V2LeakMetadata;
+}
+
+export interface V2AutocompleteDBNamesResponse {
+  items: V2AutocompleteDBNameItem[];
+  took_ms?: number;
+}
+
+export interface V2AutocompleteFieldItem {
+  dbname?: string;
+  count?: number;
+}
+
+export interface V2AutocompleteFieldsResponse {
+  field?: string;
+  items: V2AutocompleteFieldItem[];
+  total?: number;
+  took_ms?: number;
+}
+
+export interface V2BreachAutocompleteValuesOptions {
+  field?: string;
+  q?: string;
+  limit?: number;
+  includeInfo?: boolean;
+  include_info?: boolean;
+}
+
+export interface V2BreachAutocompleteDBNamesOptions {
+  q?: string;
+  limit?: number;
+}
+
+export interface V2BreachAutocompleteFieldsOptions {
+  limit?: number;
+}
+
+// ============================================
 // V2 VICTIMS RESPONSES
 // ============================================
 

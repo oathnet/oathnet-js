@@ -20,6 +20,7 @@ import { ExportsService } from './services/exports';
 import { BulkSearchService } from './services/bulkSearch';
 import { UtilityService } from './services/utility';
 import { ScannersService } from './services/scanners';
+import { BreachV2Service } from './services/breach';
 
 export interface OathNetClientOptions {
   baseUrl?: string;
@@ -37,6 +38,7 @@ export class OathNetClient {
   private _bulkSearch?: BulkSearchService;
   private _utility?: UtilityService;
   private _scanners?: ScannersService;
+  private _breach?: BreachV2Service;
 
   constructor(
     public readonly apiKey: string,
@@ -224,5 +226,12 @@ export class OathNetClient {
       this._scanners = new ScannersService(this);
     }
     return this._scanners;
+  }
+
+  get breach(): BreachV2Service {
+    if (!this._breach) {
+      this._breach = new BreachV2Service(this);
+    }
+    return this._breach;
   }
 }
