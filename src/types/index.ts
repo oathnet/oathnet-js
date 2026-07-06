@@ -512,15 +512,27 @@ export interface ExportProgress {
 }
 
 export interface ExportResult {
+  format?: string;
   file_name?: string;
+  file_path?: string;
   file_size?: number;
   records?: number;
-  format?: string;
+  ready_at?: string;
   expires_at?: string;
   download_url?: string;
 }
 
+export interface ExportRequestSummary {
+  type?: string;
+  service?: string;
+  format?: string;
+  limit?: number;
+  fields?: string[];
+  request_count?: number;
+}
+
 export interface ExportJobData {
+  id?: string;
   job_id?: string;
   status?: string;  // queued, running, completed, canceled
   progress?: ExportProgress;
@@ -529,8 +541,53 @@ export interface ExportJobData {
   started_at?: string;
   completed_at?: string;
   expires_at?: string;
+  last_error?: string;
+  request?: ExportRequestSummary;
   next_poll_after_ms?: number;
+  metadata?: Record<string, unknown>;
   _meta?: ResponseMeta;
+}
+
+// ============================================
+// V2 BULK SEARCH RESPONSES
+// ============================================
+
+export type BulkSearchServiceType = 'stealer' | 'docs' | 'victims' | 'breach';
+export type BulkSearchFormat = 'csv' | 'json' | 'jsonl' | 'txt' | 'html';
+
+export interface BulkSearchCreateRequest {
+  [key: string]: unknown;
+  terms?: string[];
+  service: BulkSearchServiceType;
+  format?: BulkSearchFormat;
+  dbnames?: string[];
+  query_config?: SearchQueryConfig;
+  limit?: number;
+  fields?: string[];
+}
+
+export interface BulkSearchListOptions {
+  page?: number;
+  pageSize?: number;
+  page_size?: number;
+}
+
+export interface BulkSearchJobData extends ExportJobData {
+  user?: string;
+  updated_at?: string;
+  search_service?: string | null;
+  output_format?: BulkSearchFormat | string | null;
+  results_expired?: boolean;
+  query?: string | null;
+  results_count?: number | null;
+  lookups_deducted?: number | null;
+}
+
+export interface BulkSearchListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: BulkSearchJobData[];
 }
 
 // ============================================
