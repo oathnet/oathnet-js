@@ -4,7 +4,7 @@
 
 import { OathNetClient } from '../../src';
 import { OSINTService } from '../../src/services/osint';
-import type { ApiResponse, ExtractSubdomainData, GHuntData } from '../../src';
+import type { ApiResponse, DiscordToRobloxData, ExtractSubdomainData, GHuntData } from '../../src';
 import { getApiKey, TEST_DATA } from '../helpers';
 
 describe('OSINTService', () => {
@@ -36,6 +36,21 @@ describe('OSINTService', () => {
         username: 'Notch',
         search_id: 'search-123',
       });
+    });
+
+    it('types disabled Discord-to-Roblox payload fields', () => {
+      const disabled: DiscordToRobloxData = {
+        discord_id: '123456789012345678',
+        roblox_id: null,
+        cached: false,
+        disabled: true,
+        skipped: true,
+        results_found: 0,
+      };
+
+      expect(disabled.disabled).toBe(true);
+      expect(disabled.skipped).toBe(true);
+      expect(disabled.results_found).toBe(0);
     });
 
     it('passes search_id for scalar OSINT lookup methods', async () => {

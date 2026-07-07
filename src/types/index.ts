@@ -1607,7 +1607,8 @@ export interface DiscordUsernameHistoryData {
 }
 
 export interface DiscordToRobloxData {
-  roblox_id?: string;
+  discord_id?: string;
+  roblox_id?: string | null;
   name?: string;
   displayName?: string;
   created?: string;
@@ -1615,6 +1616,10 @@ export interface DiscordToRobloxData {
   avatar?: string;
   badges?: string[];
   groupCount?: number;
+  cached?: boolean;
+  disabled?: boolean;
+  skipped?: boolean;
+  results_found?: number;
   _meta?: ResponseMeta;
 }
 
