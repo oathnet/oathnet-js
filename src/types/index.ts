@@ -526,7 +526,7 @@ export interface V2PhonebookEmailInsight {
   [key: string]: any;
 }
 
-export interface V2PhonebookResponse {
+export interface V2PhonebookData {
   domain?: string;
   subdomains?: string[];
   subdomain_results?: V2PhonebookSubdomainInsight[];
@@ -543,6 +543,10 @@ export interface V2PhonebookResponse {
   redacted_email_count?: number;
   [key: string]: any;
 }
+
+export type V2PhonebookResponse = ApiResponse<V2PhonebookData> & {
+  _meta?: ResponseMeta;
+};
 
 export interface V2PhonebookOptions {
   domain?: string;
@@ -665,7 +669,7 @@ export interface V2FileMetadataResult {
   [key: string]: any;
 }
 
-export interface V2FileMetadataSearchResponse {
+export interface V2FileMetadataSearchData {
   items?: V2FileMetadataResult[];
   meta?: V2SearchMeta;
   next_cursor?: string;
@@ -674,6 +678,11 @@ export interface V2FileMetadataSearchResponse {
   redaction_marker?: string;
   [key: string]: any;
 }
+
+export type V2FileMetadataSearchResponse =
+  ApiResponse<V2FileMetadataSearchData> & {
+    _meta?: ResponseMeta;
+  };
 
 export interface V2VictimPropertyResult {
   log_id?: string;
@@ -697,7 +706,7 @@ export interface V2VictimPropertyResult {
   [key: string]: any;
 }
 
-export interface V2VictimPropertiesSearchResponse {
+export interface V2VictimPropertiesSearchData {
   items?: V2VictimPropertyResult[];
   meta?: V2SearchMeta;
   next_cursor?: string;
@@ -707,11 +716,16 @@ export interface V2VictimPropertiesSearchResponse {
   [key: string]: any;
 }
 
+export type V2VictimPropertiesSearchResponse =
+  ApiResponse<V2VictimPropertiesSearchData> & {
+    _meta?: ResponseMeta;
+  };
+
 export interface V2InvestigationSections {
   credentials?: V2StealerData;
   victims?: V2VictimsData;
-  evidence?: V2VictimPropertiesSearchResponse;
-  files?: V2FileMetadataSearchResponse;
+  evidence?: V2VictimPropertiesSearchData;
+  files?: V2FileMetadataSearchData;
   related_credentials?: V2StealerData;
 }
 
@@ -770,9 +784,9 @@ export interface V2InvestigationSearchData {
   sections?: V2InvestigationSections;
   credentials?: V2StealerData;
   victims?: V2VictimsData;
-  evidence?: V2VictimPropertiesSearchResponse;
-  properties?: V2VictimPropertiesSearchResponse;
-  files?: V2FileMetadataSearchResponse;
+  evidence?: V2VictimPropertiesSearchData;
+  properties?: V2VictimPropertiesSearchData;
+  files?: V2FileMetadataSearchData;
   related_credentials?: V2StealerData;
   links?: V2InvestigationLink[];
   relations?: V2InvestigationRelation[];

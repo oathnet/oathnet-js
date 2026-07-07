@@ -218,6 +218,34 @@ describe('ExportsService', () => {
   });
 
   describe('waitForCompletion', () => {
+    it('uses server suggested poll interval when provided', async () => {
+      const { get, service } = createService();
+      get
+        .mockResolvedValueOnce({
+          success: true,
+          data: {
+            job_id: 'export-1',
+            status: 'running',
+            next_poll_after_ms: 5000,
+          },
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          data: {
+            job_id: 'export-1',
+            status: 'completed',
+          },
+        });
+      const sleep = jest
+        .spyOn(service as any, 'sleep')
+        .mockResolvedValue(undefined);
+
+      const result = await service.waitForCompletion('export-1', 1000, 10000);
+
+      expect(result.data?.status).toBe('completed');
+      expect(sleep).toHaveBeenCalledWith(5000);
+    });
+
     it('should wait for export completion', async () => {
       if (!client) {
         console.log('Skipping: OATHNET_API_KEY not set');

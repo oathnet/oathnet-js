@@ -60,15 +60,19 @@ describe('FileSearchService', () => {
     it('searches file metadata with documented GET params', async () => {
       const { get, service } = createService();
       get.mockResolvedValue({
-        items: [
-          {
-            log_id: 'log-123',
-            file_id: 'file-1',
-            name: 'Cookies.txt',
-            kind: 'cookies',
-          },
-        ],
-        meta: { count: 1, took_ms: 3 },
+        success: true,
+        message: 'V2-File-Metadata-Search completed successfully',
+        data: {
+          items: [
+            {
+              log_id: 'log-123',
+              file_id: 'file-1',
+              name: 'Cookies.txt',
+              kind: 'cookies',
+            },
+          ],
+          meta: { count: 1, took_ms: 3 },
+        },
       });
 
       const result = await service.searchFilesMetadataV2({
@@ -85,7 +89,8 @@ describe('FileSearchService', () => {
         searchId: 'session-123',
       });
 
-      expect(result.items?.[0].file_id).toBe('file-1');
+      expect(result.success).toBe(true);
+      expect(result.data?.items?.[0].file_id).toBe('file-1');
       expect(get).toHaveBeenCalledWith('/service/v2/files/search', {
         q: 'example.com',
         log_id: 'log-123',
@@ -104,8 +109,11 @@ describe('FileSearchService', () => {
     it('posts file metadata searches with a normalized JSON body', async () => {
       const { post, service } = createService();
       post.mockResolvedValue({
-        items: [{ log_id: 'log-123', file_id: 'file-2', kind: 'passwords' }],
-        meta: { count: 1, took_ms: 4 },
+        success: true,
+        data: {
+          items: [{ log_id: 'log-123', file_id: 'file-2', kind: 'passwords' }],
+          meta: { count: 1, took_ms: 4 },
+        },
       });
 
       const result = await service.searchFilesMetadataV2Post({
@@ -115,7 +123,7 @@ describe('FileSearchService', () => {
         searchId: 'session-post',
       });
 
-      expect(result.items?.[0].kind).toBe('passwords');
+      expect(result.data?.items?.[0].kind).toBe('passwords');
       expect(post).toHaveBeenCalledWith('/service/v2/files/search', {
         q: 'password',
         kind: 'passwords',
@@ -292,6 +300,34 @@ describe('FileSearchService', () => {
   });
 
   describe('waitForCompletion', () => {
+    it('uses server suggested poll interval when provided', async () => {
+      const { get, service } = createService();
+      get
+        .mockResolvedValueOnce({
+          success: true,
+          data: {
+            job_id: 'job-1',
+            status: 'running',
+            next_poll_after_ms: 5000,
+          },
+        })
+        .mockResolvedValueOnce({
+          success: true,
+          data: {
+            job_id: 'job-1',
+            status: 'completed',
+          },
+        });
+      const sleep = jest
+        .spyOn(service as any, 'sleep')
+        .mockResolvedValue(undefined);
+
+      const result = await service.waitForCompletion('job-1', 1000, 10000);
+
+      expect(result.data?.status).toBe('completed');
+      expect(sleep).toHaveBeenCalledWith(5000);
+    });
+
     it('should wait for job completion', async () => {
       if (!client) {
         console.log('Skipping: OATHNET_API_KEY not set');

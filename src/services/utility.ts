@@ -3,7 +3,6 @@
  */
 
 import { OathNetClient } from '../client';
-import { V2HealthData, V2AnalyticsData } from '../types';
 
 export class UtilityService {
   constructor(private client: OathNetClient) {}
@@ -18,21 +17,4 @@ export class UtilityService {
     });
   }
 
-  /**
-   * V2 Health check
-   * Returns unwrapped health status object
-   */
-  async health(): Promise<V2HealthData> {
-    return this.client.get<V2HealthData>('/service/v2/health');
-  }
-
-  /**
-   * V2 Analytics statistics
-   * Returns unwrapped analytics data
-   */
-  async analytics(format: 'json' | 'html' = 'json'): Promise<V2AnalyticsData> {
-    return this.client.get<V2AnalyticsData>('/service/v2/analytics/stats', {
-      format,
-    });
-  }
 }

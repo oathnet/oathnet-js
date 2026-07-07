@@ -177,7 +177,7 @@ export class ExportsService {
       }
 
       const suggestedPoll = response.data?.next_poll_after_ms || pollInterval;
-      await this.sleep(Math.min(suggestedPoll, pollInterval));
+      await this.sleep(suggestedPoll);
     }
   }
 

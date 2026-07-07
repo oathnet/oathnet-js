@@ -184,8 +184,12 @@ describe('VictimsService', () => {
     it('searches victim properties with GET params', async () => {
       const { get, service } = createService();
       get.mockResolvedValue({
-        items: [{ log_id: 'log-123', service: 'discord' }],
-        meta: { count: 1, took_ms: 4 },
+        success: true,
+        message: 'V2-Victim-Properties-Search completed successfully',
+        data: {
+          items: [{ log_id: 'log-123', service: 'discord' }],
+          meta: { count: 1, took_ms: 4 },
+        },
       });
 
       const result = await service.searchVictimPropertiesV2({
@@ -213,7 +217,8 @@ describe('VictimsService', () => {
         searchId: 'session-123',
       });
 
-      expect(result.items?.[0].service).toBe('discord');
+      expect(result.success).toBe(true);
+      expect(result.data?.items?.[0].service).toBe('discord');
       expect(get).toHaveBeenCalledWith(
         '/service/v2/victims/properties/search',
         {
@@ -246,8 +251,11 @@ describe('VictimsService', () => {
     it('posts victim properties with normalized JSON body', async () => {
       const { post, service } = createService();
       post.mockResolvedValue({
-        items: [{ log_id: 'log-123', property_id: 'prop-1' }],
-        meta: { count: 1, took_ms: 5 },
+        success: true,
+        data: {
+          items: [{ log_id: 'log-123', property_id: 'prop-1' }],
+          meta: { count: 1, took_ms: 5 },
+        },
       });
 
       const result = await service.searchVictimPropertiesV2Post({
@@ -259,7 +267,7 @@ describe('VictimsService', () => {
         searchId: 'session-post',
       });
 
-      expect(result.items?.[0].property_id).toBe('prop-1');
+      expect(result.data?.items?.[0].property_id).toBe('prop-1');
       expect(post).toHaveBeenCalledWith(
         '/service/v2/victims/properties/search',
         {
@@ -276,8 +284,11 @@ describe('VictimsService', () => {
     it('gets one victim property set with encoded log_id and filters', async () => {
       const { get, service } = createService();
       get.mockResolvedValue({
-        items: [{ log_id: 'log/with space', service: 'telegram' }],
-        meta: { count: 1, took_ms: 2 },
+        success: true,
+        data: {
+          items: [{ log_id: 'log/with space', service: 'telegram' }],
+          meta: { count: 1, took_ms: 2 },
+        },
       });
 
       const result = await service.getVictimPropertiesV2('log/with space', {
@@ -286,7 +297,7 @@ describe('VictimsService', () => {
         searchId: 'session-123',
       });
 
-      expect(result.items?.[0].service).toBe('telegram');
+      expect(result.data?.items?.[0].service).toBe('telegram');
       expect(get).toHaveBeenCalledWith(
         '/service/v2/victims/log%2Fwith%20space/properties',
         {

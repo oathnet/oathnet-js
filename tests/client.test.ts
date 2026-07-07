@@ -2,7 +2,7 @@
  * Tests for OathNetClient initialization and basic functionality.
  */
 
-import { OathNetClient } from '../src';
+import { OathNetClient, ValidationError } from '../src';
 import { getApiKey, createTestClient } from './helpers';
 
 describe('OathNetClient', () => {
@@ -82,6 +82,26 @@ describe('OathNetClient', () => {
       const client = new OathNetClient('invalid-api-key');
 
       await expect(client.search.breach('test')).rejects.toThrow();
+    });
+  });
+
+  describe('error mapping', () => {
+    it('does not classify validation messages mentioning credentials as auth', () => {
+      const client = new OathNetClient('test-api-key') as any;
+      const mapped = client.handleError({
+        isAxiosError: true,
+        response: {
+          status: 400,
+          data: {
+            message: 'Invalid include section: credentials,victims',
+            errors: {
+              include: ['Invalid include section: credentials,victims'],
+            },
+          },
+        },
+      });
+
+      expect(mapped).toBeInstanceOf(ValidationError);
     });
   });
 });

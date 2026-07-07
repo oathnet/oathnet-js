@@ -581,7 +581,7 @@ export class StealerV2Service {
     if (include === undefined) {
       return;
     }
-    params.include = Array.isArray(include) ? include.join(',') : include;
+    params.include = Array.isArray(include) ? include : include;
   }
 
   private assign(

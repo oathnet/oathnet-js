@@ -105,9 +105,8 @@ const session = await client.search.initSession('query');
 
 // Search breach database
 const results = await client.search.breach('query', {
-  page: 1,
-  limit: 25,
-  dbname: 'linkedin',  // Optional database filter
+  cursor: undefined,
+  dbnames: 'linkedin',  // Optional database filter
 });
 
 // Search stealer database
@@ -207,11 +206,10 @@ const result = await client.fileSearch.search('api_key', {
 
 ```typescript
 // Create export
-const job = await client.exports.create({
-  exportType: 'docs',  // 'docs' or 'victims'
+const job = await client.exports.create('docs', {
   format: 'csv',       // 'csv' or 'jsonl'
   limit: 1000,
-  fields: ['email', 'password', 'domain'],
+  fields: ['email', 'domain'],
   search: { query: 'example.com' },
 });
 
@@ -220,7 +218,7 @@ const result = await client.exports.waitForCompletion(job.data.job_id);
 const data = await client.exports.download(job.data.job_id);
 
 // Or download to file
-await client.exports.downloadToFile(job.data.job_id, 'export.csv');
+await client.exports.download(job.data.job_id, 'export.csv');
 ```
 
 ### Error Handling
@@ -262,7 +260,7 @@ try {
 oathnet --api-key KEY --format json|table|raw COMMAND
 
 # Search commands
-oathnet search breach -q "query" [--page N] [--limit N] [--dbnames name]
+oathnet search breach -q "query" [--cursor CURSOR] [--dbnames name]
 oathnet search stealer -q "query"
 oathnet search init -q "query"
 

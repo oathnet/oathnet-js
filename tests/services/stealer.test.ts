@@ -214,7 +214,7 @@ describe('StealerV2Service', () => {
         {
           q: 'example.com',
           scope: 'all',
-          include: 'credentials,victims,evidence',
+          include: ['credentials', 'victims', 'evidence'],
           page_size: 25,
           search_id: 'sess_0123456789abcdef',
           filter: JSON.stringify(filter),
@@ -389,37 +389,41 @@ describe('StealerV2Service', () => {
       });
     });
 
-    it('gets raw Phonebook domain intelligence with documented query params', async () => {
+    it('gets wrapped Phonebook domain intelligence with documented query params', async () => {
       const { get, service } = createService();
       get.mockResolvedValue({
-        domain: 'example.com',
-        subdomains: ['accounts.example.com'],
-        subdomain_results: [
-          {
-            domain: 'accounts.example.com',
-            count: 12,
-            latest_indexed_at: '2026-03-20T12:00:00Z',
-            redacted: false,
-          },
-        ],
-        emails: [
-          {
-            email: 'alice@example.com',
-            count: 3,
-            stealer_count: 1,
-            breach_result_count: 2,
-            breach_count: 1,
-            redacted: false,
-          },
-        ],
-        count: 1,
-        email_count: 1,
-        policy_redacted: false,
-        upgrade_required: false,
-        visible_subdomain_limit: null,
-        visible_email_limit: null,
-        redacted_subdomain_count: 0,
-        redacted_email_count: 0,
+        success: true,
+        message: 'V2-Phonebook completed successfully',
+        data: {
+          domain: 'example.com',
+          subdomains: ['accounts.example.com'],
+          subdomain_results: [
+            {
+              domain: 'accounts.example.com',
+              count: 12,
+              latest_indexed_at: '2026-03-20T12:00:00Z',
+              redacted: false,
+            },
+          ],
+          emails: [
+            {
+              email: 'alice@example.com',
+              count: 3,
+              stealer_count: 1,
+              breach_result_count: 2,
+              breach_count: 1,
+              redacted: false,
+            },
+          ],
+          count: 1,
+          email_count: 1,
+          policy_redacted: false,
+          upgrade_required: false,
+          visible_subdomain_limit: null,
+          visible_email_limit: null,
+          redacted_subdomain_count: 0,
+          redacted_email_count: 0,
+        },
       });
 
       const result = await service.getPhonebookV2('example.com', {
@@ -427,8 +431,9 @@ describe('StealerV2Service', () => {
         searchId: 'sess_0123456789abcdef',
       });
 
-      expect(result.domain).toBe('example.com');
-      expect(result.subdomain_results?.[0].domain).toBe(
+      expect(result.success).toBe(true);
+      expect(result.data?.domain).toBe('example.com');
+      expect(result.data?.subdomain_results?.[0].domain).toBe(
         'accounts.example.com'
       );
       expect(get).toHaveBeenCalledWith('/service/v2/phonebook', {
@@ -438,13 +443,16 @@ describe('StealerV2Service', () => {
       });
     });
 
-    it('supports the Phonebook q and is_alive aliases without wrapping the response', async () => {
+    it('supports the Phonebook q and is_alive aliases on wrapped responses', async () => {
       const { get, service } = createService();
       get.mockResolvedValue({
-        domain: 'alias.example',
-        subdomains: [],
-        count: 0,
-        email_count: 0,
+        success: true,
+        data: {
+          domain: 'alias.example',
+          subdomains: [],
+          count: 0,
+          email_count: 0,
+        },
       });
 
       const result = await service.phonebook({
@@ -452,8 +460,8 @@ describe('StealerV2Service', () => {
         is_alive: false,
       });
 
-      expect(result).not.toHaveProperty('success');
-      expect(result.domain).toBe('alias.example');
+      expect(result.success).toBe(true);
+      expect(result.data?.domain).toBe('alias.example');
       expect(get).toHaveBeenCalledWith('/service/v2/phonebook', {
         q: 'alias.example',
         is_alive: false,

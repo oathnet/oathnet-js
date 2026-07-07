@@ -155,10 +155,11 @@ export class OathNetClient {
       const message = data?.message || data?.error || error.message;
 
       // Check for auth errors in response message
+      const lowerMessage = message?.toLowerCase() ?? '';
       if (
-        message?.toLowerCase().includes('credentials') ||
-        message?.toLowerCase().includes('api key') ||
-        message?.toLowerCase().includes('invalid api key')
+        lowerMessage.includes('api key') ||
+        lowerMessage.includes('invalid api key') ||
+        lowerMessage.includes('authentication credentials')
       ) {
         return new AuthenticationError(message, data);
       }
