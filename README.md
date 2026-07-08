@@ -72,7 +72,7 @@ oathnet --format json search breach -q "winterfox"
 - **V2 Exports**: Export results to CSV/JSONL
 
 ### OSINT Lookups
-- Discord (user info, username history, linked Roblox)
+- Discord (user info and username history)
 - Steam profiles
 - Xbox Live profiles
 - Roblox user info
@@ -130,9 +130,6 @@ const discord = await client.osint.discordUserinfo('discord_id');
 
 // Discord username history
 const history = await client.osint.discordUsernameHistory('discord_id');
-
-// Discord to Roblox
-const roblox = await client.osint.discordToRoblox('discord_id');
 
 // Roblox user
 const robloxUser = await client.osint.robloxUserinfo({ username: 'username' });

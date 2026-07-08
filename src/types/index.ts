@@ -601,6 +601,8 @@ export interface V2InvestigationSearchOptions {
   include_cookie_evidence?: boolean;
   excludeCookieEvidence?: boolean;
   exclude_cookie_evidence?: boolean;
+  filters?: V2InvestigationSectionFilters;
+  cursors?: V2InvestigationSectionCursors;
 }
 
 export type V2InvestigationSectionFilters = Partial<

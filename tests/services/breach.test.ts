@@ -92,15 +92,15 @@ describe('BreachV2Service', () => {
     );
   });
 
-  it('searches V2 breach records with documented GET params', async () => {
-    const { get, service } = createService();
+  it('searches V2 breach records with structured filters in a JSON body', async () => {
+    const { post, service } = createService();
     const filter: StructuredFilterNode = {
       and: [
         { field: 'country', operator: 'eq', value: 'US' },
         { field: 'email_domain', operator: 'eq', value: 'example.com' },
       ],
     };
-    get.mockResolvedValue({
+    post.mockResolvedValue({
       success: true,
       data: {
         items: [],
@@ -154,8 +154,76 @@ describe('BreachV2Service', () => {
     });
 
     expect(result.success).toBe(true);
-    expect(get).toHaveBeenCalledWith('/service/v2/breach/search', {
-      q: 'alice+test@example.com',
+    expect(post).toHaveBeenCalledWith(
+      expect.stringContaining('/service/v2/breach/search?'),
+      {
+        q: 'alice+test@example.com',
+        filter,
+        filter_id: '0123456789abcdef01234567',
+      }
+    );
+
+    const calledPath = post.mock.calls[0][0] as string;
+    const searchParams = new URL(
+      calledPath,
+      'https://example.com'
+    ).searchParams;
+    expect(searchParams.get('cursor')).toBe('cursor/with space');
+    expect(searchParams.get('page_size')).toBe('25');
+    expect(searchParams.get('sort')).toBe('-indexed_at');
+    expect(searchParams.get('from')).toBe('2026-01-01T00:00:00Z');
+    expect(searchParams.get('to')).toBe('2026-01-31T23:59:59Z');
+    expect(searchParams.get('date_field')).toBe('indexed_at');
+    expect(searchParams.get('wildcard')).toBe('true');
+    expect(searchParams.get('logic')).toBe('and');
+    expect(searchParams.get('date_birth_from')).toBe('1990-01-01');
+    expect(searchParams.get('date_birth_to')).toBe('1990-12-31');
+    expect(searchParams.get('search_id')).toBe('session-123');
+    expect(searchParams.getAll('email[]')).toEqual(['alice@example.com']);
+    expect(searchParams.getAll('email_domain[]')).toEqual(['example.com']);
+    expect(searchParams.getAll('domain[]')).toEqual(['app.example.com']);
+    expect(searchParams.getAll('username[]')).toEqual(['alice']);
+    expect(searchParams.getAll('password[]')).toEqual(['secret']);
+    expect(searchParams.getAll('password_hash[]')).toEqual(['sha256:value']);
+    expect(searchParams.getAll('ip[]')).toEqual(['203.0.113.9']);
+    expect(searchParams.getAll('phone[]')).toEqual(['+15551234567']);
+    expect(searchParams.getAll('first_name[]')).toEqual(['Alice']);
+    expect(searchParams.getAll('last_name[]')).toEqual(['Doe']);
+    expect(searchParams.getAll('full_name[]')).toEqual(['Alice Doe']);
+    expect(searchParams.getAll('city[]')).toEqual(['New York']);
+    expect(searchParams.getAll('country[]')).toEqual(['US']);
+    expect(searchParams.getAll('state[]')).toEqual(['NY']);
+    expect(searchParams.getAll('postal_code[]')).toEqual(['10001']);
+    expect(searchParams.getAll('dbname[]')).toEqual(['db/name & space']);
+    expect(searchParams.getAll('discord_id[]')).toEqual(['1234567890']);
+    expect(searchParams.getAll('iban[]')).toEqual(['DE89370400440532013000']);
+    expect(searchParams.getAll('ssn[]')).toEqual(['123-45-6789']);
+    expect(searchParams.getAll('name[]')).toEqual(['Alice D']);
+    expect(searchParams.getAll('gender[]')).toEqual(['female']);
+    expect(searchParams.getAll('address[]')).toEqual(['123 Main St']);
+    expect(searchParams.getAll('discord[]')).toEqual(['alice#1234']);
+    expect(searchParams.getAll('social[]')).toEqual(['@alice']);
+    expect(searchParams.getAll('financial[]')).toEqual(['visa']);
+    expect(searchParams.getAll('gaming[]')).toEqual(['xbox']);
+    expect(searchParams.getAll('fields[]')).toEqual(['email', 'dbname']);
+    expect(searchParams.getAll('instagram[]')).toEqual(['alice_ig']);
+    expect(searchParams.has('filter')).toBe(false);
+    expect(searchParams.has('filter_id')).toBe(false);
+    expect(searchParams.has('q')).toBe(false);
+  });
+
+  it('searches V2 breach records with documented GET params', async () => {
+    const { get, service } = createService();
+    get.mockResolvedValue({
+      success: true,
+      data: {
+        items: [],
+        meta: { count: 0, took_ms: 4 },
+        next_cursor: undefined,
+      },
+    });
+
+    const result = await service.searchBreachV2('alice+test@example.com', {
       cursor: 'cursor/with space',
       page_size: 25,
       sort: '-indexed_at',
@@ -164,8 +232,6 @@ describe('BreachV2Service', () => {
       date_field: 'indexed_at',
       wildcard: true,
       logic: 'and',
-      filter: JSON.stringify(filter),
-      filter_id: '0123456789abcdef01234567',
       date_birth_from: '1990-01-01',
       date_birth_to: '1990-12-31',
       search_id: 'session-123',
@@ -198,6 +264,30 @@ describe('BreachV2Service', () => {
       'fields[]': ['email', 'dbname'],
       'instagram[]': ['alice_ig'],
     });
+
+    expect(result.success).toBe(true);
+    expect(get).toHaveBeenCalledWith(
+      '/service/v2/breach/search',
+      expect.objectContaining({
+        q: 'alice+test@example.com',
+        cursor: 'cursor/with space',
+        page_size: 25,
+        sort: '-indexed_at',
+        from: '2026-01-01T00:00:00Z',
+        to: '2026-01-31T23:59:59Z',
+        date_field: 'indexed_at',
+        wildcard: true,
+        logic: 'and',
+        date_birth_from: '1990-01-01',
+        date_birth_to: '1990-12-31',
+        search_id: 'session-123',
+        'email[]': ['alice@example.com'],
+        'email_domain[]': ['example.com'],
+        'domain[]': ['app.example.com'],
+        'fields[]': ['email', 'dbname'],
+        'instagram[]': ['alice_ig'],
+      })
+    );
   });
 
   it('posts V2 breach JSON filters with documented query params encoded in the path', async () => {

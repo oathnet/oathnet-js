@@ -123,7 +123,15 @@ export class VictimsService {
     queryOrOptions?: string | VictimsSearchOptions,
     options: VictimsSearchOptions = {}
   ): Promise<ApiResponse<V2VictimsData>> {
-    return this.searchWithOptions(queryOrOptions, options);
+    const searchOptions = this.normalizeSearchOptions(queryOrOptions, options);
+    if (this.shouldUsePostSearch(searchOptions)) {
+      return this.searchPost(
+        this.buildPostBodyFromSearchOptions(searchOptions),
+        searchOptions as V2VictimsSearchPostOptions
+      );
+    }
+
+    return this.searchWithOptions(searchOptions);
   }
 
   /**
@@ -478,42 +486,36 @@ export class VictimsService {
   private buildSearchPostParams(
     options: V2VictimsSearchPostOptions
   ): Record<string, any> {
-    const params: Record<string, any> = {};
-    this.assign(params, 'cursor', options.cursor);
-    this.assign(params, 'page_size', options.pageSize ?? options.page_size);
-    this.assign(params, 'sort', options.sort);
-    this.assign(params, 'from', options.from);
-    this.assign(params, 'to', options.to);
-    this.assign(params, 'date_field', options.dateField ?? options.date_field);
-    this.assign(params, 'search_id', options.searchId ?? options.search_id);
-    this.assign(params, 'view', options.view);
-    this.addArrayParam(params, 'fields[]', options.fields ?? options['fields[]']);
-
-    for (const [key, value] of Object.entries(options)) {
-      if (
-        value !== undefined &&
-        ![
-          'cursor',
-          'pageSize',
-          'page_size',
-          'sort',
-          'from',
-          'to',
-          'dateField',
-          'date_field',
-          'fields',
-          'fields[]',
-          'searchId',
-          'search_id',
-          'view',
-        ].includes(key) &&
-        key.endsWith('[]')
-      ) {
-        this.addArrayParam(params, key, value);
-      }
-    }
-
+    const params = this.buildSearchParams(options as VictimsSearchOptions);
+    delete params.q;
+    delete params.filter;
+    delete params.filter_id;
     return params;
+  }
+
+  private shouldUsePostSearch(options: VictimsSearchOptions): boolean {
+    return (
+      options.filter !== undefined ||
+      options.filterId !== undefined ||
+      options.filter_id !== undefined
+    );
+  }
+
+  private buildPostBodyFromSearchOptions(
+    options: VictimsSearchOptions
+  ): V2SearchPostBody {
+    const body: V2SearchPostBody = {};
+    if (options.q !== undefined) {
+      body.q = options.q;
+    }
+    if (options.filter !== undefined) {
+      body.filter = options.filter as any;
+    }
+    const filterId = options.filterId ?? options.filter_id;
+    if (filterId !== undefined) {
+      body.filter_id = filterId;
+    }
+    return body;
   }
 
   private normalizeSearchPostBody(body: V2SearchPostBody): V2SearchPostBody {

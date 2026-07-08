@@ -112,7 +112,15 @@ export class StealerV2Service {
     queryOrOptions?: string | StealerSearchOptions,
     options: StealerSearchOptions = {}
   ): Promise<ApiResponse<V2StealerData>> {
-    return this.searchWithOptions(queryOrOptions, options);
+    const searchOptions = this.normalizeSearchOptions(queryOrOptions, options);
+    if (this.shouldUsePostSearch(searchOptions)) {
+      return this.searchPost(
+        this.buildPostBodyFromSearchOptions(searchOptions),
+        searchOptions as V2StealerSearchPostOptions
+      );
+    }
+
+    return this.searchWithOptions(searchOptions);
   }
 
   /**
@@ -221,10 +229,22 @@ export class StealerV2Service {
     queryOrOptions?: string | V2InvestigationSearchOptions,
     options: V2InvestigationSearchOptions = {}
   ): Promise<V2InvestigationSearchResponse> {
-    return this.investigateWithPath(
-      STEALER_INVESTIGATION_PATH,
+    const searchOptions = this.normalizeInvestigationOptions(
       queryOrOptions,
       options
+    );
+    if (
+      searchOptions.filters !== undefined ||
+      searchOptions.cursors !== undefined
+    ) {
+      return this.investigatePost(
+        this.buildInvestigationBodyFromOptions(searchOptions)
+      );
+    }
+
+    return this.investigateWithPath(
+      STEALER_INVESTIGATION_PATH,
+      searchOptions
     );
   }
 
@@ -413,42 +433,36 @@ export class StealerV2Service {
   private buildSearchPostParams(
     options: V2StealerSearchPostOptions
   ): Record<string, any> {
-    const params: Record<string, any> = {};
-    this.assign(params, 'cursor', options.cursor);
-    this.assign(params, 'page_size', options.pageSize ?? options.page_size);
-    this.assign(params, 'sort', options.sort);
-    this.assign(params, 'from', options.from);
-    this.assign(params, 'to', options.to);
-    this.assign(params, 'date_field', options.dateField ?? options.date_field);
-    this.assign(params, 'search_id', options.searchId ?? options.search_id);
-    this.assign(params, 'view', options.view);
-    this.addArrayParam(params, 'fields[]', options.fields ?? options['fields[]']);
-
-    for (const [key, value] of Object.entries(options)) {
-      if (
-        value !== undefined &&
-        ![
-          'cursor',
-          'pageSize',
-          'page_size',
-          'sort',
-          'from',
-          'to',
-          'dateField',
-          'date_field',
-          'fields',
-          'fields[]',
-          'searchId',
-          'search_id',
-          'view',
-        ].includes(key) &&
-        key.endsWith('[]')
-      ) {
-        this.addArrayParam(params, key, value);
-      }
-    }
-
+    const params = this.buildSearchParams(options as StealerSearchOptions);
+    delete params.q;
+    delete params.filter;
+    delete params.filter_id;
     return params;
+  }
+
+  private shouldUsePostSearch(options: StealerSearchOptions): boolean {
+    return (
+      options.filter !== undefined ||
+      options.filterId !== undefined ||
+      options.filter_id !== undefined
+    );
+  }
+
+  private buildPostBodyFromSearchOptions(
+    options: StealerSearchOptions
+  ): V2SearchPostBody {
+    const body: V2SearchPostBody = {};
+    if (options.q !== undefined) {
+      body.q = options.q;
+    }
+    if (options.filter !== undefined) {
+      body.filter = options.filter as any;
+    }
+    const filterId = options.filterId ?? options.filter_id;
+    if (filterId !== undefined) {
+      body.filter_id = filterId;
+    }
+    return body;
   }
 
   private normalizeSearchPostBody(body: V2SearchPostBody): V2SearchPostBody {
@@ -498,6 +512,41 @@ export class StealerV2Service {
     );
 
     return params;
+  }
+
+  private buildInvestigationBodyFromOptions(
+    options: V2InvestigationSearchOptions
+  ): V2InvestigationSearchRequest {
+    const include =
+      typeof options.include === 'string'
+        ? (options.include
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean) as any)
+        : options.include;
+
+    return this.normalizeInvestigationBody({
+      q: options.q,
+      scope: options.scope,
+      include,
+      pageSize: options.pageSize,
+      page_size: options.page_size,
+      searchId: options.searchId,
+      search_id: options.search_id,
+      filter: options.filter as StructuredFilterNode | undefined,
+      filterId: options.filterId,
+      filter_id: options.filter_id,
+      filterMode: options.filterMode,
+      filter_mode: options.filter_mode,
+      compact: options.compact,
+      view: options.view,
+      filters: options.filters,
+      cursors: options.cursors,
+      includeCookieEvidence: options.includeCookieEvidence,
+      include_cookie_evidence: options.include_cookie_evidence,
+      excludeCookieEvidence: options.excludeCookieEvidence,
+      exclude_cookie_evidence: options.exclude_cookie_evidence,
+    });
   }
 
   private normalizeInvestigationBody(

@@ -164,6 +164,15 @@ export class BreachV2Service {
     options: V2BreachSearchOptions = {}
   ): Promise<ApiResponse<V2BreachData>> {
     const searchOptions = this.normalizeSearchOptions(queryOrOptions, options);
+    if (this.shouldUsePostSearch(searchOptions)) {
+      const postOptions = { ...searchOptions } as V2BreachSearchPostOptions;
+      delete (postOptions as any).q;
+      return this.searchPost(
+        this.buildPostBodyFromSearchOptions(searchOptions),
+        postOptions
+      );
+    }
+
     const params = this.buildSearchParams(searchOptions);
 
     return this.client.get<ApiResponse<V2BreachData>>(
@@ -355,6 +364,27 @@ export class BreachV2Service {
     delete params.filter;
     delete params.filter_id;
     return params;
+  }
+
+  private shouldUsePostSearch(options: V2BreachSearchOptions): boolean {
+    return options.filter !== undefined || options.filterId !== undefined || options.filter_id !== undefined;
+  }
+
+  private buildPostBodyFromSearchOptions(
+    options: V2BreachSearchOptions
+  ): V2BreachSearchPostBody {
+    const body: V2BreachSearchPostBody = {};
+    if (options.q !== undefined) {
+      body.q = options.q;
+    }
+    if (options.filter !== undefined) {
+      body.filter = options.filter as any;
+    }
+    const filterId = options.filterId ?? options.filter_id;
+    if (filterId !== undefined) {
+      body.filter_id = filterId;
+    }
+    return body;
   }
 
   private normalizePostBody(
