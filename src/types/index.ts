@@ -1641,6 +1641,38 @@ export interface RobloxUserData {
 
 export interface HoleheData {
   domains: string[];
+  partial?: boolean;
+  provider_summary?: {
+    status: 'complete' | 'partial' | 'failed';
+    total: number;
+    completed: number;
+    failed: number;
+  };
+  provider_statuses?: Array<{
+    provider: string;
+    status:
+      | 'found'
+      | 'not_found'
+      | 'timeout'
+      | 'overall_timeout'
+      | 'rate_limited'
+      | 'no_verdict'
+      | 'invalid_response'
+      | 'error';
+    duration_ms?: number;
+  }>;
+  provider_timing?: {
+    sample_size: number;
+    average_ms: number | null;
+    p50_ms: number | null;
+    p95_ms: number | null;
+    p99_ms: number | null;
+    max_ms: number | null;
+    sweep_ms: number;
+    module_timeout_ms: number;
+    overall_timeout_ms: number;
+  };
+  warning?: string;
   _meta?: ResponseMeta;
 }
 

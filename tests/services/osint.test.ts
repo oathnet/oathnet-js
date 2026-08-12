@@ -4,7 +4,7 @@
 
 import { OathNetClient } from '../../src';
 import { OSINTService } from '../../src/services/osint';
-import type { ApiResponse, DiscordToRobloxData, ExtractSubdomainData, GHuntData } from '../../src';
+import type { ApiResponse, DiscordToRobloxData, ExtractSubdomainData, GHuntData, HoleheData } from '../../src';
 import { getApiKey, TEST_DATA } from '../helpers';
 
 describe('OSINTService', () => {
@@ -51,6 +51,32 @@ describe('OSINTService', () => {
       expect(disabled.disabled).toBe(true);
       expect(disabled.skipped).toBe(true);
       expect(disabled.results_found).toBe(0);
+    });
+
+    it('types backward-compatible Holehe coverage and latency fields', () => {
+      const result: HoleheData = {
+        domains: ['example.test'],
+        partial: true,
+        provider_summary: { status: 'partial', total: 2, completed: 1, failed: 1 },
+        provider_statuses: [
+          { provider: 'alpha', status: 'found', duration_ms: 12.5 },
+          { provider: 'beta', status: 'timeout', duration_ms: 6001.2 },
+        ],
+        provider_timing: {
+          sample_size: 2,
+          average_ms: 3006.85,
+          p50_ms: 12.5,
+          p95_ms: 6001.2,
+          p99_ms: 6001.2,
+          max_ms: 6001.2,
+          sweep_ms: 6002,
+          module_timeout_ms: 6000,
+          overall_timeout_ms: 25000,
+        },
+      };
+
+      expect(result.provider_timing?.p99_ms).toBe(6001.2);
+      expect(result.provider_summary?.completed).toBe(1);
     });
 
     it('passes search_id for scalar OSINT lookup methods', async () => {
